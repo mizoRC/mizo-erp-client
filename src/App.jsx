@@ -3,6 +3,7 @@ import {ApolloClient, ApolloLink, InMemoryCache, HttpLink} from "apollo-boost";
 import { ApolloProvider } from '@apollo/react-hooks';
 import { BrowserRouter } from "react-router-dom";
 import AppRouter from "./containers/AppRouter";
+import ThemeContainer from './containers/ThemeContainer';
 
 console.info('REACT_APP_API_URL', process.env.REACT_APP_API_URL);
 
@@ -34,9 +35,11 @@ const client = new ApolloClient({
 function App() {
 	return (
 		<ApolloProvider client={client}>
-			<BrowserRouter>
-				<AppRouter />
-			</BrowserRouter>
+            <ThemeContainer>
+                <BrowserRouter>
+                    <AppRouter />
+                </BrowserRouter>
+            </ThemeContainer>
 		</ApolloProvider>
 	);
 }
