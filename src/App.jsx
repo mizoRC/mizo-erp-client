@@ -2,10 +2,9 @@ import React from "react";
 import {ApolloClient, ApolloLink, InMemoryCache, HttpLink} from "apollo-boost";
 import { ApolloProvider } from '@apollo/react-hooks';
 import { BrowserRouter } from "react-router-dom";
-import AppRouter from "./containers/AppRouter";
+import Translator from './contextProviders/Translator';
 import ThemeContainer from './containers/ThemeContainer';
-
-console.info('REACT_APP_API_URL', process.env.REACT_APP_API_URL);
+import AppRouter from "./containers/AppRouter";
 
 const httpLink = new HttpLink({
     uri: process.env.REACT_APP_API_URL
@@ -36,9 +35,11 @@ function App() {
 	return (
 		<ApolloProvider client={client}>
             <ThemeContainer>
-                <BrowserRouter>
-                    <AppRouter />
-                </BrowserRouter>
+                <Translator>
+                    <BrowserRouter>
+                        <AppRouter />
+                    </BrowserRouter>
+                </Translator>
             </ThemeContainer>
 		</ApolloProvider>
 	);

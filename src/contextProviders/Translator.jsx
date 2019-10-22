@@ -1,6 +1,7 @@
 import React from 'react';
 import { gql } from 'apollo-boost';
-import { client } from '../App';
+import { useApolloClient } from '@apollo/react-hooks';
+import { execute } from '../utils/graphql';
 import Loading from '../components/Loading';
 const TranslatorContext = React.createContext({
     translations: []
@@ -8,26 +9,33 @@ const TranslatorContext = React.createContext({
 
 export { TranslatorContext };
 
+function getBrowserLanguage(){
+    return navigator.language || navigator.userLanguage;
+}
+
 
 const Translator = ({children}) => {
-    const [loading, setLoading] = React.useState(true);
-    const [language, setLanguage] = React.useState('en');
-    const [translations, setTranslations] = React.useState([]);
+    const browserLanguage = getBrowserLanguage();
+    const client = useApolloClient();
+    const [loading, setLoading] = React.useState(false);
+    const [language, setLanguage] = React.useState(browserLanguage);
+    const [translations, setTranslations] = React.useState({});
 
     const getTranslations = async(language) => {
-        const getTranslationsQuery = gql`
-            query getTranslations{
-                translations{
+        const query = gql`
+            query translations($language: Languages!){
+                translations(language:$language){
                     label
                     ${language}
                 }
             }
         `;
         
-        /* EXPRESS API QUERY 
-        const response = await fetch(`//${process.env.REACT_APP_API_URL}/translations/all`);
-        const translationsArray = await response.json(); */
-        const response = await client.query({query: getTranslationsQuery});
+        const params = {
+            language: language
+        };
+        
+        const response = await execute(client, "query", query, params);
         const translationsArray = response.data.translations;
         let translations = {};
 
@@ -38,7 +46,7 @@ const Translator = ({children}) => {
         return translations;
     };
 
-    const updateLanguage = async(newLanguage) => {
+    /* const updateLanguage = async(newLanguage) => {
         if(newLanguage !== language){
             try {
                 setLoading(true);
@@ -52,14 +60,20 @@ const Translator = ({children}) => {
                 setLoading(false);
             }
         }
+    } */
+
+    const updateLanguage = (newLanguage) => {
+        if(newLanguage !== language){
+            setLanguage(newLanguage);
+        }
     }
 
     const loadTranslations = async () => {
         try {
             setLoading(true);
             const updatedTranslations = await getTranslations(language);
-            setLoading(false);
-            setTranslations(updatedTranslations); 
+            setTranslations(updatedTranslations);
+            setLoading(false); 
         } catch (error) {
             setLoading(false);
         }
@@ -67,7 +81,7 @@ const Translator = ({children}) => {
 
     React.useEffect(() => {
         loadTranslations();
-    },[]);
+    },[language]);
 
     return(
         <>
