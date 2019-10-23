@@ -5,7 +5,6 @@ import Register from '../components/Register';
 import Dashboard from '../components/Dashboard';
 
 const AppRouter = () => {
-    console.info('AppRouter')
     const redirectToRoot = () => {
 		return <Redirect to="/" />
 	};

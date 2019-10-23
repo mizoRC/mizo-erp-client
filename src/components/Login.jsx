@@ -8,11 +8,13 @@ import { TranslatorContext } from '../contextProviders/Translator';
 import CustomCard from '../displayComponents/CustomCard/Card';
 import CustomCardHeader from '../displayComponents/CustomCard/CardHeader';
 import CustomCardBody from '../displayComponents/CustomCard/CardBody';
+import * as mainStyles from '../styles';
 import bgImage from '../assets/fondo.png';
 import logo from '../assets/logo_white.svg';
 
 
 const useStyles = makeStyles(theme => ({
+    ...mainStyles,
     mainPaperContainer: {
         width: '100%',
         height: '100%',
@@ -164,7 +166,7 @@ const Login = ({history}) => {
                                     <form noValidate autoComplete="off">
                                         <TextField
                                             id="outlined-username"
-                                            label="Email"
+                                            label={translations.email}
                                             value={email}
                                             onChange={handleChangeEmail}
                                             margin="normal"
@@ -176,7 +178,7 @@ const Login = ({history}) => {
 
                                         <TextField
                                             id="outlined-password"
-                                            label="Password"
+                                            label={translations.password}
                                             value={password}
                                             onChange={handleChangePassword}
                                             margin="normal"
@@ -197,7 +199,7 @@ const Login = ({history}) => {
                                                 }}
                                             >
                                                 <Typography variant="h6" style={{color: 'red'}}>
-                                                    Usuario no válido
+                                                    {translations.invalidUser}
                                                 </Typography>
                                             </div>
                                         }
