@@ -5,6 +5,7 @@ import { withRouter } from 'react-router-dom';
 import { gql } from 'apollo-boost';
 import { execute } from '../utils/graphql';
 import { TranslatorContext } from '../contextProviders/Translator';
+import useDisplayBreakpoints from '../contextProviders/useDisplayBreakpoints';
 import { mainCountries, countries } from '../datasheets/countries';
 import { languages } from '../datasheets/languages';
 import { CustomCard, CustomCardHeader, CustomCardBody, CustomCardFooter } from '../displayComponents/CustomCard';
@@ -12,7 +13,6 @@ import { primary, tertiary } from '../styles/colors';
 import * as mainStyles from '../styles';
 import bgImage from '../assets/fondo.png';
 import logoComplete from '../assets/logo_complete_white.svg';
-
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles,
@@ -50,6 +50,7 @@ const useStyles = makeStyles(theme => ({
 const Register = ({history}) => {
     const classes = useStyles();
     const client = useApolloClient();
+    const breakpoint = useDisplayBreakpoints();
     const [name, setName] = React.useState('');
     const [surname, setSurname] = React.useState('');
     const [email, setEmail] = React.useState('');
@@ -416,16 +417,19 @@ const Register = ({history}) => {
                                                     </FormControl>
                                                 </Grid>
                                                 <Grid item xs={12} sm={6}>
-                                                   <TextField
-                                                        id="outlined-name"
-                                                        label={translations.address}
-                                                        value={address}
-                                                        onChange={handleChangeAddress}
-                                                        margin="normal"
-                                                        error={errorEmptyAddress}
-                                                        fullWidth={true}
-                                                        onKeyPress={handleEnterKey}
-                                                    />
+                                                    <FormControl fullWidth={true}>
+                                                        <InputLabel htmlFor="input-address">
+                                                            {translations.address}
+                                                        </InputLabel>
+                                                        <Input
+                                                            id="input-address"
+                                                            type={'text'}
+                                                            value={address}
+                                                            onChange={handleChangeAddress}
+                                                            error={errorEmptyAddress}
+                                                            onKeyPress={handleEnterKey}
+                                                        />
+                                                    </FormControl>
                                                 </Grid>
                                             </Grid> 
                                             

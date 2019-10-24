@@ -26,3 +26,10 @@ export const centered = {
     alignItems: 'center',
     justifyContent: 'center'
 }
+
+export const centeredHorizontal = {
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center'
+}
