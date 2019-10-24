@@ -88,14 +88,12 @@ const Login = ({history}) => {
             try {
                 const mutation = gql`
                     mutation login(
-                        $user: String!
-                        $apikey: String!
+                        $email: String!
+                        $password: String!
                     ) {
                         login(
-                            credentials:{
-                                user: $user
-                                apikey: $apikey
-                            }
+                            email: $email,
+                            password: $password
                         ) {
                             token
                         }
