@@ -206,6 +206,10 @@ const Register = ({history}) => {
         return hasErrors;
     };
 
+    // React.useEffect(() => {
+    //     console.info('BREAKPOINT', breakpoint);
+    // },[breakpoint]);
+
     return(
         <TranslatorContext.Consumer>
             {({translations}) => (
@@ -259,45 +263,82 @@ const Register = ({history}) => {
                                             style={{height: '100%', overflowY: 'auto'}}
                                         >
                                             <Grid container spacing={1}>
-                                                <Grid item xs={12} sm={4}>
-                                                    <TextField
-                                                        id="outlined-name"
-                                                        label={translations.name}
-                                                        value={name}
-                                                        onChange={handleChangeName}
-                                                        margin="normal"
-                                                        error={errorEmptyName}
-                                                        fullWidth={true}
-                                                        onKeyPress={handleEnterKey}
-                                                    />
+                                                <Grid item xs={12} sm={4} md={4}>
+                                                    <FormControl fullWidth={true}>
+                                                        <InputLabel htmlFor="input-name">
+                                                            {translations.name}
+                                                        </InputLabel>
+                                                        <Input
+                                                            id="input-name"
+                                                            type={'text'}
+                                                            value={name}
+                                                            onChange={handleChangeName}
+                                                            error={errorEmptyName}
+                                                            fullWidth={true}
+                                                            onKeyPress={handleEnterKey}
+                                                        />
+                                                    </FormControl>
                                                 </Grid>
-                                                <Grid item xs={12} sm={8}>
-                                                    <TextField
-                                                        id="outlined-surname"
-                                                        label={translations.surname}
-                                                        value={surname}
-                                                        onChange={handleChangeSurname}
-                                                        margin="normal"
-                                                        error={errorEmptySurname}
-                                                        fullWidth={true}
-                                                        onKeyPress={handleEnterKey}
-                                                    />
+                                                <Grid item xs={12} sm={4} md={4}>
+                                                    <FormControl fullWidth={true}>
+                                                        <InputLabel htmlFor="input-surname">
+                                                            {translations.surname}
+                                                        </InputLabel>
+                                                        <Input
+                                                            id="input-surname"
+                                                            type={'text'}
+                                                            value={surname}
+                                                            onChange={handleChangeSurname}
+                                                            error={errorEmptySurname}
+                                                            fullWidth={true}
+                                                            onKeyPress={handleEnterKey}
+                                                        />
+                                                    </FormControl>
                                                 </Grid>
-
-                                                <Grid item xs={12} sm={12}>
-                                                    <TextField
-                                                        id="outlined-email"
-                                                        label={translations.email}
-                                                        value={email}
-                                                        onChange={handleChangeEmail}
-                                                        margin="normal"
-                                                        error={errorEmptyEmail}
-                                                        fullWidth={true}
-                                                        onKeyPress={handleEnterKey}
-                                                    />
+                                                <Grid item xs={12} sm={4} md={4}>
+                                                    <FormControl error={errorEmptyLanguage} fullWidth={true}>
+                                                        <InputLabel htmlFor="language-select">
+                                                            {translations.language}
+                                                        </InputLabel>
+                                                        <Select
+                                                            native
+                                                            value={language}
+                                                            onChange={handleChangeLanguage}
+                                                            inputProps={{
+                                                                name: 'language',
+                                                                id: 'language-select',
+                                                            }}
+                                                        >
+                                                            <option value="" />
+                                                            {languages.map(selectLanguage => (
+                                                                <option 
+                                                                    key={selectLanguage.code}
+                                                                    value={selectLanguage.code}
+                                                                >
+                                                                    {selectLanguage.name}
+                                                                </option>
+                                                            ))}
+                                                        </Select>
+                                                    </FormControl>
                                                 </Grid>
-
-                                                <Grid item xs={12} sm={6}>
+                                                
+                                                <Grid item xs={12} sm={6} md={6}>
+                                                    <FormControl fullWidth={true}>
+                                                        <InputLabel htmlFor="input-email">
+                                                            {translations.email}
+                                                        </InputLabel>
+                                                        <Input
+                                                            id="input-email"
+                                                            type={'text'}
+                                                            value={email}
+                                                            onChange={handleChangeEmail}
+                                                            error={errorEmptyEmail}
+                                                            fullWidth={true}
+                                                            onKeyPress={handleEnterKey}
+                                                        />
+                                                    </FormControl>
+                                                </Grid>
+                                                <Grid item xs={12} sm={6} md={6}>
                                                     <FormControl fullWidth={true}>
                                                         <InputLabel htmlFor="adornment-password">
                                                             {translations.password}
@@ -327,59 +368,41 @@ const Register = ({history}) => {
                                                         />
                                                     </FormControl>
                                                 </Grid>
-                                                <Grid item xs={12} sm={6}>
-                                                    <FormControl error={errorEmptyLanguage} fullWidth={true}>
-                                                        <InputLabel htmlFor="language-select">
-                                                            {translations.language}
+                                                
+
+                                                <Grid item xs={12} sm={4} md={4}>
+                                                    <FormControl fullWidth={true}>
+                                                        <InputLabel htmlFor="input-company-name">
+                                                            {translations.companyName}
                                                         </InputLabel>
-                                                        <Select
-                                                            native
-                                                            value={language}
-                                                            onChange={handleChangeLanguage}
-                                                            inputProps={{
-                                                                name: 'language',
-                                                                id: 'language-select',
-                                                            }}
-                                                        >
-                                                            <option value="" />
-                                                            {languages.map(selectLanguage => (
-                                                                <option 
-                                                                    key={selectLanguage.code}
-                                                                    value={selectLanguage.code}
-                                                                >
-                                                                    {selectLanguage.name}
-                                                                </option>
-                                                            ))}
-                                                        </Select>
+                                                        <Input
+                                                            id="input-company-name"
+                                                            type={'text'}
+                                                            value={companyName}
+                                                            onChange={handleChangeCompanyName}
+                                                            error={errorEmptyCompanyName}
+                                                            fullWidth={true}
+                                                            onKeyPress={handleEnterKey}
+                                                        />
+                                                    </FormControl>
+                                                </Grid>
+                                                <Grid item xs={12} sm={4} md={4}>
+                                                    <FormControl fullWidth={true}>
+                                                        <InputLabel htmlFor="input-address">
+                                                            {translations.address}
+                                                        </InputLabel>
+                                                        <Input
+                                                            id="input-address"
+                                                            type={'text'}
+                                                            value={address}
+                                                            onChange={handleChangeAddress}
+                                                            error={errorEmptyAddress}
+                                                            onKeyPress={handleEnterKey}
+                                                        />
                                                     </FormControl>
                                                 </Grid>
 
-                                                <Grid item xs={12} sm={6}>
-                                                    <TextField
-                                                        id="outlined-company-name"
-                                                        label={translations.companyName}
-                                                        value={companyName}
-                                                        onChange={handleChangeCompanyName}
-                                                        margin="normal"
-                                                        error={errorEmptyCompanyName}
-                                                        fullWidth={true}
-                                                        onKeyPress={handleEnterKey}
-                                                    />
-                                                </Grid>
-                                                <Grid item xs={12} sm={6}>
-                                                    <TextField
-                                                        id="outlined-phone"
-                                                        label={translations.phone}
-                                                        value={phone}
-                                                        onChange={handleChangePhone}
-                                                        margin="normal"
-                                                        error={errorEmptyPhone}
-                                                        fullWidth={true}
-                                                        onKeyPress={handleEnterKey}
-                                                    />
-                                                </Grid>
-
-                                                <Grid item xs={12} sm={6}>
+                                                <Grid item xs={12} sm={2} md={2}>
                                                     <FormControl error={errorEmptyCountry} fullWidth={true}>
                                                         <InputLabel htmlFor="country-select">
                                                             {translations.country}
@@ -416,17 +439,18 @@ const Register = ({history}) => {
                                                         </Select>
                                                     </FormControl>
                                                 </Grid>
-                                                <Grid item xs={12} sm={6}>
+                                                <Grid item xs={12} sm={2} md={2}>
                                                     <FormControl fullWidth={true}>
-                                                        <InputLabel htmlFor="input-address">
-                                                            {translations.address}
+                                                        <InputLabel htmlFor="input-phone">
+                                                            {translations.phone}
                                                         </InputLabel>
                                                         <Input
-                                                            id="input-address"
+                                                            id="input-phone"
                                                             type={'text'}
-                                                            value={address}
-                                                            onChange={handleChangeAddress}
-                                                            error={errorEmptyAddress}
+                                                            value={phone}
+                                                            onChange={handleChangePhone}
+                                                            error={errorEmptyPhone}
+                                                            fullWidth={true}
                                                             onKeyPress={handleEnterKey}
                                                         />
                                                     </FormControl>
@@ -435,7 +459,7 @@ const Register = ({history}) => {
                                             
                                             <div
                                                 style={{
-                                                    marginTop: '40px',
+                                                    marginTop: (breakpoint === "xs" || breakpoint === "sm" || breakpoint === "md") ? '10px' : '40px',
                                                     padding: '10px',
                                                     borderRadius: '4px',
                                                     display: 'flex',
