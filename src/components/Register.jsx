@@ -3,13 +3,14 @@ import { Paper, TextField, FormControl, InputLabel, Select, Grid, Divider, Butto
 import { useApolloClient } from '@apollo/react-hooks';
 import { withRouter } from 'react-router-dom';
 import { gql } from 'apollo-boost';
+import jwt_decode from 'jwt-decode';
 import { execute } from '../utils/graphql';
 import { TranslatorContext } from '../contextProviders/Translator';
 import useDisplayBreakpoints from '../contextProviders/useDisplayBreakpoints';
 import { mainCountries, countries } from '../datasheets/countries';
 import { languages } from '../datasheets/languages';
 import { CustomCard, CustomCardHeader, CustomCardBody, CustomCardFooter } from '../displayComponents/CustomCard';
-import { primary, tertiary } from '../styles/colors';
+import { primary, tertiary, error } from '../styles/colors';
 import * as mainStyles from '../styles';
 import bgImage from '../assets/fondo.png';
 import logoComplete from '../assets/logo_complete_white.svg';
@@ -71,6 +72,7 @@ const Register = ({history}) => {
     const [errorEmptyPhone, setErrorEmptyPhone] = React.useState(false);
     const [errorEmptyCountry, setErrorEmptyCountry] = React.useState(false);
     const [errorEmptyAddress, setErrorEmptyAddress] = React.useState(false);
+    const [errorAlreadyRegisteredEmail, setErrorAlreadyRegisteredEmail] = React.useState(false);
     
 
     const handleChangeName = event => {
@@ -124,10 +126,6 @@ const Register = ({history}) => {
         }
     };
 
-    const goToDashboard = () => {
-        history.replace(`/dashboard/userID`);
-    };
-
     const register = async() => {
         const hasErrors = checkErrors();
 
@@ -163,14 +161,19 @@ const Register = ({history}) => {
                 if(!!response && !!response.data && !!response.data.register && !!response.data.register.token){
                     const token = response.data.register.token;
                     sessionStorage.setItem("token", token);
-                    setRegisterFailed();
-                    goToDashboard();
+                    setRegisterFailed(false);
+                    setErrorAlreadyRegisteredEmail(false);
+                    let decodedToken = jwt_decode(response.data.register.token);
+                    history.replace(`/dashboard/${decodedToken.employee.id}`);
                 }
                 else{
                     setRegisterFailed(true);
                 }
             } catch (error) {
-                console.error(error);
+                console.info('ERROR',error);
+                if(error.includes("Email already registered")){
+                    setErrorAlreadyRegisteredEmail(true);
+                }
                 setRegisterFailed(true);
             }
             
@@ -206,13 +209,9 @@ const Register = ({history}) => {
         return hasErrors;
     };
 
-    // React.useEffect(() => {
-    //     console.info('BREAKPOINT', breakpoint);
-    // },[breakpoint]);
-
     return(
         <TranslatorContext.Consumer>
-            {({translations}) => (
+            {({translations, updateLanguage}) => (
                 <Paper className={classes.mainPaperContainer} square={true}>
                     <div
                         style={{
@@ -256,7 +255,7 @@ const Register = ({history}) => {
                                                     fontSize: '30px'
                                                 }}
                                             >
-                                                Registro
+                                                {translations.signUp}
                                             </div>
                                         </CustomCardHeader>
                                         <CustomCardBody
@@ -332,7 +331,7 @@ const Register = ({history}) => {
                                                             type={'text'}
                                                             value={email}
                                                             onChange={handleChangeEmail}
-                                                            error={errorEmptyEmail}
+                                                            error={errorEmptyEmail || errorAlreadyRegisteredEmail}
                                                             fullWidth={true}
                                                             onKeyPress={handleEnterKey}
                                                         />
@@ -370,7 +369,7 @@ const Register = ({history}) => {
                                                 </Grid>
                                                 
 
-                                                <Grid item xs={12} sm={4} md={4}>
+                                                <Grid item xs={12} sm={4} md={4} lg={6}>
                                                     <FormControl fullWidth={true}>
                                                         <InputLabel htmlFor="input-company-name">
                                                             {translations.companyName}
@@ -386,7 +385,7 @@ const Register = ({history}) => {
                                                         />
                                                     </FormControl>
                                                 </Grid>
-                                                <Grid item xs={12} sm={4} md={4}>
+                                                <Grid item xs={12} sm={4} md={4} lg={6}>
                                                     <FormControl fullWidth={true}>
                                                         <InputLabel htmlFor="input-address">
                                                             {translations.address}
@@ -402,7 +401,7 @@ const Register = ({history}) => {
                                                     </FormControl>
                                                 </Grid>
 
-                                                <Grid item xs={12} sm={2} md={2}>
+                                                <Grid item xs={12} sm={2} md={2} lg={6}>
                                                     <FormControl error={errorEmptyCountry} fullWidth={true}>
                                                         <InputLabel htmlFor="country-select">
                                                             {translations.country}
@@ -439,7 +438,7 @@ const Register = ({history}) => {
                                                         </Select>
                                                     </FormControl>
                                                 </Grid>
-                                                <Grid item xs={12} sm={2} md={2}>
+                                                <Grid item xs={12} sm={2} md={2} lg={6}>
                                                     <FormControl fullWidth={true}>
                                                         <InputLabel htmlFor="input-phone">
                                                             {translations.phone}
@@ -486,10 +485,22 @@ const Register = ({history}) => {
                                             style={{
                                                 height: '70px', 
                                                 display: 'flex',
+                                                flexDirection: 'column',
                                                 alignItems: 'center',
                                                 justifyContent: 'center'
                                             }}
                                         >
+                                            {errorAlreadyRegisteredEmail &&
+                                                <div
+                                                    style={{
+                                                        marginBottom: '10px',
+                                                        color: error
+                                                    }}
+                                                >
+                                                    {translations.emailAlreadyRegistered}
+                                                </div>
+                                            }
+
                                             <Button 
                                                 variant="contained" 
                                                 color="primary"

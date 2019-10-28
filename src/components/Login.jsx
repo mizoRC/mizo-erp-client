@@ -3,6 +3,7 @@ import { Paper, TextField, Button, Typography, makeStyles } from '@material-ui/c
 import { useApolloClient } from '@apollo/react-hooks';
 import { withRouter, Link } from 'react-router-dom';
 import { gql } from 'apollo-boost';
+import jwt_decode from 'jwt-decode';
 import { execute } from '../utils/graphql';
 import { TranslatorContext } from '../contextProviders/Translator';
 import CustomCard from '../displayComponents/CustomCard/Card';
@@ -77,10 +78,6 @@ const Login = ({history}) => {
         }
     };
 
-    const goToDashboard = () => {
-        history.replace(`/dashboard/userID`);
-    };
-
     const login = async() => {
         const hasErrors = checkErrors();
 
@@ -110,7 +107,9 @@ const Login = ({history}) => {
                     const token = response.data.login.token;
                     sessionStorage.setItem("token", token);
                     setLoginFailed(false);
-                    goToDashboard();
+                    let decodedToken = jwt_decode(response.data.login.token);
+                    console.info('decodedToken', decodedToken);
+                    history.replace(`/dashboard/${decodedToken.employee.id}`);
                 }
                 else{
                     setLoginFailed(true);
@@ -228,7 +227,7 @@ const Login = ({history}) => {
                                             textAlign: 'center'
                                         }}
                                     >
-                                        <Link to="/register" className="link">
+                                        <Link to="/signup" className="link">
                                             {translations.dontHaveAccount}
                                         </Link>
                                     </div>

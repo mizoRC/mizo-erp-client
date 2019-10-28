@@ -12,7 +12,7 @@ const AppRouter = () => {
 	return (
 		<Switch>
             <Route exact path="/" component={Login} />
-            <Route exact path="/register" component={Register} />
+            <Route exact path="/signup" component={Register} />
             <Route exact path="/dashboard/:userID" component={Dashboard} />
 
             {/* Mantener como ultima para que sepa cuales son las rutas que si son validas */}

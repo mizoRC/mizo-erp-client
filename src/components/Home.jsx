@@ -16,7 +16,10 @@ const queryCompanies = gql`
 `;
 
 const Home = () => {
-    const {loading, error, data} = useQuery(queryCompanies);
+    return(
+        <div>HOME</div>
+    )
+    /* const {loading, error, data} = useQuery(queryCompanies);
     if (loading){
         return <p>Loading...</p>;
     }
@@ -53,7 +56,7 @@ const Home = () => {
                 </p>
 			</header>
 		</div>
-	);
+	); */
 };
 
 export default Home;

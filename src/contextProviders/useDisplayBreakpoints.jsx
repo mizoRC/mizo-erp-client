@@ -18,6 +18,7 @@ const useDisplayBreakpoints = () => {
     };
 
     React.useEffect(() => {
+        updateSize();
         window.addEventListener("resize", updateSize);
 
         return () => {

@@ -46,22 +46,6 @@ const Translator = ({children}) => {
         return translations;
     };
 
-    /* const updateLanguage = async(newLanguage) => {
-        if(newLanguage !== language){
-            try {
-                setLoading(true);
-                setLanguage(newLanguage);
-
-                const updatedTranslations = await getTranslations(newLanguage);
-
-                setLoading(false);
-                setTranslations(updatedTranslations);
-            } catch (error) {
-                setLoading(false);
-            }
-        }
-    } */
-
     const updateLanguage = (newLanguage) => {
         if(newLanguage !== language){
             setLanguage(newLanguage);

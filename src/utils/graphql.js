@@ -5,10 +5,10 @@ const handleQueryErrors = (error) => {
             errors.push(apoloError.message)
         );
     } else {
-        errors.push(error.message);
+        errors=error.graphQLErrors[0].message;
     }
 
-    throw new Error(errors);
+    throw errors;
 };
 
 export const execute = (client, type, query, variables) => {
