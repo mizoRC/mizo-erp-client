@@ -1,9 +1,9 @@
 import React from 'react';
-import { Paper, TextField, FormControl, InputLabel, Select, Grid, Divider, Button, Input, InputAdornment, IconButton, makeStyles } from '@material-ui/core';
+import { Paper, FormControl, InputLabel, Select, Grid, Button, Input, InputAdornment, FormHelperText, CircularProgress, IconButton, makeStyles } from '@material-ui/core';
 import { useApolloClient } from '@apollo/react-hooks';
-import { withRouter } from 'react-router-dom';
 import { gql } from 'apollo-boost';
 import jwt_decode from 'jwt-decode';
+import { withRouter } from 'react-router-dom';
 import { execute } from '../utils/graphql';
 import { TranslatorContext } from '../contextProviders/Translator';
 import useDisplayBreakpoints from '../contextProviders/useDisplayBreakpoints';
@@ -73,6 +73,9 @@ const Register = ({history}) => {
     const [errorEmptyCountry, setErrorEmptyCountry] = React.useState(false);
     const [errorEmptyAddress, setErrorEmptyAddress] = React.useState(false);
     const [errorAlreadyRegisteredEmail, setErrorAlreadyRegisteredEmail] = React.useState(false);
+    const [validEmail, setValidEmail] = React.useState(true);
+    const [validPassword, setValidPassword] = React.useState(true);
+    const [registering, setRegistering] = React.useState(false);
     
 
     const handleChangeName = event => {
@@ -84,11 +87,17 @@ const Register = ({history}) => {
     };
 
     const handleChangeEmail = event => {
-        setEmail(event.target.value);
+        const newEmail = event.target.value;
+        const isValidEmail = (/^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[A-Za-z]+$/.test(newEmail));
+        setValidEmail(isValidEmail);
+        setEmail(newEmail);
     };
 
     const handleChangePassword = event => {
-        setPassword(event.target.value);
+        const newPassword = event.target.value;
+        const isValidPassword = newPassword.length >= 8;
+        setValidPassword(isValidPassword);
+        setPassword(newPassword);
     };
 
     const handleChangeLanguage = event => {
@@ -131,6 +140,7 @@ const Register = ({history}) => {
 
         if(!hasErrors){
             try {
+                setRegistering(true);
                 const mutation = gql`
                     mutation register(
                         $registerInfo: RegisterInfo!
@@ -161,20 +171,23 @@ const Register = ({history}) => {
                 if(!!response && !!response.data && !!response.data.register && !!response.data.register.token){
                     const token = response.data.register.token;
                     sessionStorage.setItem("token", token);
-                    setRegisterFailed(false);
                     setErrorAlreadyRegisteredEmail(false);
+                    setRegistering(false);
                     let decodedToken = jwt_decode(response.data.register.token);
                     history.replace(`/dashboard/${decodedToken.employee.id}`);
                 }
                 else{
+                    setRegistering(false);
                     setRegisterFailed(true);
                 }
             } catch (error) {
-                console.info('ERROR',error);
+                setRegistering(false);
                 if(error.includes("Email already registered")){
                     setErrorAlreadyRegisteredEmail(true);
                 }
-                setRegisterFailed(true);
+                else{
+                    setRegisterFailed(true);
+                }
             }
             
         }
@@ -204,14 +217,14 @@ const Register = ({history}) => {
         setErrorEmptyCountry(isEmptyCountry);
         setErrorEmptyAddress(isEmptyAddress);
 
-        hasErrors = isEmptyName || isEmptySurname || isEmptyEmail || isEmptyPassword || isEmptyLanguage || isEmptyCompanyName || isEmptyPhone || isEmptyCountry || isEmptyAddress;
+        hasErrors = isEmptyName || isEmptySurname || isEmptyEmail || isEmptyPassword || isEmptyLanguage || isEmptyCompanyName || isEmptyPhone || isEmptyCountry || isEmptyAddress || !validEmail || !validPassword;
 
         return hasErrors;
     };
 
     return(
         <TranslatorContext.Consumer>
-            {({translations, updateLanguage}) => (
+            {({translations}) => (
                 <Paper className={classes.mainPaperContainer} square={true}>
                     <div
                         style={{
@@ -331,10 +344,13 @@ const Register = ({history}) => {
                                                             type={'text'}
                                                             value={email}
                                                             onChange={handleChangeEmail}
-                                                            error={errorEmptyEmail || errorAlreadyRegisteredEmail}
+                                                            error={errorEmptyEmail || errorAlreadyRegisteredEmail || !validEmail}
                                                             fullWidth={true}
                                                             onKeyPress={handleEnterKey}
                                                         />
+                                                        {!validEmail &&
+                                                            <FormHelperText id="invalid-email-helper-text">{translations.invalidEmail}</FormHelperText>
+                                                        }
                                                     </FormControl>
                                                 </Grid>
                                                 <Grid item xs={12} sm={6} md={6}>
@@ -347,7 +363,7 @@ const Register = ({history}) => {
                                                             type={showPassword ? 'text' : 'password'}
                                                             value={password}
                                                             onChange={handleChangePassword}
-                                                            error={errorEmptyPassword}
+                                                            error={errorEmptyPassword || !validPassword}
                                                             onKeyPress={handleEnterKey}
                                                             endAdornment={
                                                                 <InputAdornment position="end">
@@ -365,6 +381,9 @@ const Register = ({history}) => {
                                                                 </InputAdornment>
                                                             }
                                                         />
+                                                        {!validPassword &&
+                                                            <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
+                                                        }
                                                     </FormControl>
                                                 </Grid>
                                                 
@@ -416,25 +435,27 @@ const Register = ({history}) => {
                                                             }}
                                                         >
                                                             <option value="" />
-                                                            {mainCountries.map(mainCountry => (
-                                                                <option 
-                                                                    key={mainCountry.code}
-                                                                    value={mainCountry.code}
-                                                                >
-                                                                    {mainCountry.name}
-                                                                </option>
-                                                            ))}
+                                                            <optgroup label={translations.featured}>
+                                                                {mainCountries.map(mainCountry => (
+                                                                    <option 
+                                                                        key={mainCountry.code}
+                                                                        value={mainCountry.code}
+                                                                    >
+                                                                        {mainCountry.name}
+                                                                    </option>
+                                                                ))}
+                                                            </optgroup>
 
-                                                            <Divider />
-
-                                                            {countries.map(selectCountry => (
-                                                                <option 
-                                                                    key={selectCountry.code}
-                                                                    value={selectCountry.code}
-                                                                >
-                                                                    {selectCountry.name}
-                                                                </option>
-                                                            ))}
+                                                            <optgroup label={translations.all}>
+                                                                {countries.map(selectCountry => (
+                                                                    <option 
+                                                                        key={selectCountry.code}
+                                                                        value={selectCountry.code}
+                                                                    >
+                                                                        {selectCountry.name}
+                                                                    </option>
+                                                                ))}
+                                                            </optgroup>
                                                         </Select>
                                                     </FormControl>
                                                 </Grid>
@@ -445,7 +466,8 @@ const Register = ({history}) => {
                                                         </InputLabel>
                                                         <Input
                                                             id="input-phone"
-                                                            type={'text'}
+                                                            type={'tel'}
+                                                            pattern="[0-9]{3}-[0-9]{3}-[0-9]{3}"
                                                             value={phone}
                                                             onChange={handleChangePhone}
                                                             error={errorEmptyPhone}
@@ -501,12 +523,38 @@ const Register = ({history}) => {
                                                 </div>
                                             }
 
+                                            {registerFailed &&
+                                                <div
+                                                    style={{
+                                                        marginBottom: '10px',
+                                                        color: error
+                                                    }}
+                                                >
+                                                    {translations.signUpFailed}
+                                                </div>
+                                            }
+
                                             <Button 
                                                 variant="contained" 
                                                 color="primary"
                                                 onClick={register}
+                                                disabled={registering}
                                             >
-                                                {translations.startNow}
+                                                <div
+                                                    style={{
+                                                        display: 'flex',
+                                                        flexDirection:' row',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}
+                                                >
+                                                    {translations.startNow}
+                                                    {registering &&
+                                                        <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
+                                                            <CircularProgress size={20} color="secondary" />
+                                                        </div>
+                                                    }
+                                                </div>
                                             </Button>
                                         </CustomCardFooter>
                                     </CustomCard>
