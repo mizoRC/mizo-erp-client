@@ -10,7 +10,7 @@ const useStyles = makeStyles(theme => ({
 const Loading = () => {
     const classes = useStyles();
     return (
-        <Paper className={classes.fullHeight}>
+        <Paper className={classes.fullHeightWidth}>
             <Paper className={classes.centered}>
                 <img src={loadingSVG} alt="loadingIcon" style={{maxWidth: "80px"}}/>
             </Paper>
