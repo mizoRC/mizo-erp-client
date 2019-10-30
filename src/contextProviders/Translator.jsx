@@ -49,6 +49,7 @@ const Translator = ({children}) => {
     const updateLanguage = (newLanguage) => {
         if(newLanguage !== language){
             setLanguage(newLanguage);
+            sessionStorage.setItem('language', language);
         }
     }
 
@@ -56,6 +57,7 @@ const Translator = ({children}) => {
         try {
             setLoading(true);
             const updatedTranslations = await getTranslations(language);
+            sessionStorage.setItem('language', language);
             setTranslations(updatedTranslations);
             setLoading(false); 
         } catch (error) {

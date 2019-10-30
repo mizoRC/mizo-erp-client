@@ -6,6 +6,7 @@ import { gql } from 'apollo-boost';
 import jwt_decode from 'jwt-decode';
 import { execute } from '../utils/graphql';
 import { TranslatorContext } from '../contextProviders/Translator';
+import { MeContext } from '../contextProviders/Me';
 import CustomCard from '../displayComponents/CustomCard/Card';
 import CustomCardHeader from '../displayComponents/CustomCard/CardHeader';
 import CustomCardBody from '../displayComponents/CustomCard/CardBody';
@@ -57,6 +58,7 @@ const useStyles = makeStyles(theme => ({
 const Login = ({history}) => {
     const classes = useStyles();
     const client = useApolloClient();
+    const { translations } = React.useContext(TranslatorContext);
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [loginFailed, setLoginFailed] = React.useState(false);
@@ -108,7 +110,6 @@ const Login = ({history}) => {
                     sessionStorage.setItem("token", token);
                     setLoginFailed(false);
                     let decodedToken = jwt_decode(response.data.login.token);
-                    console.info('decodedToken', decodedToken);
                     history.replace(`/dashboard/${decodedToken.employee.id}`);
                 }
                 else{
@@ -136,108 +137,104 @@ const Login = ({history}) => {
     };
 
     return(
-        <TranslatorContext.Consumer>
-            {({translations}) => (
-                <Paper className={classes.mainPaperContainer} square={true}>
-                    <Paper className={classes.container} square={true}>
-                        <div className={classes.centered}>
-                            <CustomCard style={{width: "20rem"}}>
-                                <CustomCardHeader color="primary" textColor="white">
+        <Paper className={classes.mainPaperContainer} square={true}>
+            <Paper className={classes.container} square={true}>
+                <div className={classes.centered}>
+                    <CustomCard style={{width: "20rem"}}>
+                        <CustomCardHeader color="primary" textColor="white">
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <div>
+                                    <img src={logo} alt="logo" style={{maxWidth: '80px'}} />
+                                </div>
+                                <div style={{fontSize: '30px'}}>
+                                    MizoERP
+                                </div>
+                            </div>
+                        </CustomCardHeader>
+                        <CustomCardBody>
+                            <form noValidate autoComplete="off">
+                                <TextField
+                                    id="outlined-username"
+                                    label={translations.email}
+                                    value={email}
+                                    onChange={handleChangeEmail}
+                                    margin="normal"
+                                    variant="outlined"
+                                    error={errorEmptyEmail}
+                                    fullWidth={true}
+                                    onKeyPress={handleEnterKey}
+                                />
+
+                                <TextField
+                                    id="outlined-password"
+                                    label={translations.password}
+                                    value={password}
+                                    onChange={handleChangePassword}
+                                    margin="normal"
+                                    variant="outlined"
+                                    type="password"
+                                    error={errorEmptyPassword}
+                                    fullWidth={true}
+                                    onKeyPress={handleEnterKey}
+                                />
+
+                                {loginFailed &&
                                     <div
                                         style={{
+                                            width: '100%',
                                             display: 'flex',
-                                            flexDirection: 'column',
                                             alignItems: 'center',
                                             justifyContent: 'center'
                                         }}
                                     >
-                                        <div>
-                                            <img src={logo} alt="logo" style={{maxWidth: '80px'}} />
-                                        </div>
-                                        <div style={{fontSize: '30px'}}>
-                                            MizoERP
-                                        </div>
+                                        <Typography variant="h6" style={{color: 'red'}}>
+                                            {translations.invalidUser}
+                                        </Typography>
                                     </div>
-                                </CustomCardHeader>
-                                <CustomCardBody>
-                                    <form noValidate autoComplete="off">
-                                        <TextField
-                                            id="outlined-username"
-                                            label={translations.email}
-                                            value={email}
-                                            onChange={handleChangeEmail}
-                                            margin="normal"
-                                            variant="outlined"
-                                            error={errorEmptyEmail}
-                                            fullWidth={true}
-                                            onKeyPress={handleEnterKey}
-                                        />
+                                }
+                            </form>
 
-                                        <TextField
-                                            id="outlined-password"
-                                            label={translations.password}
-                                            value={password}
-                                            onChange={handleChangePassword}
-                                            margin="normal"
-                                            variant="outlined"
-                                            type="password"
-                                            error={errorEmptyPassword}
-                                            fullWidth={true}
-                                            onKeyPress={handleEnterKey}
-                                        />
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginTop: '30px',
+                                    marginBottom: '10px'
+                                }}
+                            >
+                                <Button variant="contained" color="primary" onClick={login}>
+                                    {translations.login}
+                                </Button>
+                            </div>
 
-                                        {loginFailed &&
-                                            <div
-                                                style={{
-                                                    width: '100%',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center'
-                                                }}
-                                            >
-                                                <Typography variant="h6" style={{color: 'red'}}>
-                                                    {translations.invalidUser}
-                                                </Typography>
-                                            </div>
-                                        }
-                                    </form>
-
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            marginTop: '30px',
-                                            marginBottom: '10px'
-                                        }}
-                                    >
-                                        <Button variant="contained" color="primary">
-                                            {translations.login}
-                                        </Button>
-                                    </div>
-
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            marginTop: '20px',
-                                            marginBottom: '5px',
-                                            fontSize: '10px',
-                                            textAlign: 'center'
-                                        }}
-                                    >
-                                        <Link to="/signup" className="link">
-                                            {translations.dontHaveAccount}
-                                        </Link>
-                                    </div>
-                                </CustomCardBody>
-                            </CustomCard>
-                        </div>
-                    </Paper>
-                </Paper>
-            )}
-        </TranslatorContext.Consumer>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginTop: '20px',
+                                    marginBottom: '5px',
+                                    fontSize: '10px',
+                                    textAlign: 'center'
+                                }}
+                            >
+                                <Link to="/signup" className="link">
+                                    {translations.dontHaveAccount}
+                                </Link>
+                            </div>
+                        </CustomCardBody>
+                    </CustomCard>
+                </div>
+            </Paper>
+        </Paper>
     )
 };
 

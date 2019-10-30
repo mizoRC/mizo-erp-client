@@ -1,6 +1,9 @@
 import React from "react";
-import { AppBar, Toolbar, IconButton, MenuList, MenuItem, Popper, Grow, Paper, ClickAwayListener, Typography, Hidden, makeStyles } from "@material-ui/core";
+import { AppBar, Toolbar, IconButton, MenuList, MenuItem, Popper, Grow, Paper, ClickAwayListener, Typography, Hidden, Button, makeStyles } from "@material-ui/core";
 import { withRouter } from 'react-router-dom';
+import { TranslatorContext } from '../contextProviders/Translator';
+import { MeContext } from '../contextProviders/Me';
+import { ROLES } from '../constants';
 import logoComplete from '../assets/logo_complete_white.svg';
 import logo from '../assets/logo_white.svg';
 
@@ -34,8 +37,10 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const Bar = ({history, title, transparent}) => {
+const Bar = ({history, transparent}) => {
     const classes = useStyles();
+    const { me } = React.useContext(MeContext);
+    const { translations } = React.useContext(TranslatorContext);
 	const [open, setOpen] = React.useState(false);
 	const anchorRef = React.useRef(null);
 
@@ -63,6 +68,18 @@ const Bar = ({history, title, transparent}) => {
         history.replace('/login');
     };
 
+    const goToProfile = () => {
+        history.push(`/profile/${me.id}`);
+    }
+
+    const goToCompany = () => {
+        history.push(`/company/${me.company.id}`);
+    }
+
+    const goToDashboard = () => {
+        history.push(`/dashboard/${me.id}`);
+    }
+
 	// return focus to the button when we transitioned from !open -> open
 	const prevOpen = React.useRef(open);
 	React.useEffect(() => {
@@ -72,16 +89,17 @@ const Bar = ({history, title, transparent}) => {
 
 		prevOpen.current = open;
 	}, [open]);
+
 	return (
-		<AppBar position="static" className={transparent ? classes.appBarTransparent : ''}>
-			<Toolbar className={classes.toolbar}>
+        <AppBar position="static" className={transparent ? classes.appBarTransparent : ''}>
+            <Toolbar className={classes.toolbar}>
                 <div className={classes.toolbarItemStart}>
                     <Hidden only={['sm', 'md', 'lg', 'xl']}>
-                        <img alt="logo" src={logo} style={{maxHeight: '40px'}}/>
+                        <img alt="logo" src={logo} style={{maxHeight: '40px'}} onClick={goToDashboard}/>
                     </Hidden>
                     
                     <Hidden only="xs">
-                        <img alt="logo_complete" src={logoComplete} style={{maxHeight: '40px'}}/>
+                        <img alt="logo_complete" src={logoComplete} style={{maxHeight: '40px'}} onClick={goToDashboard}/>
                     </Hidden>
                 </div>
 
@@ -95,53 +113,91 @@ const Bar = ({history, title, transparent}) => {
                             textAlign: 'center'
                         }}
                     >
-                        <Typography noWrap variant="h4">{title}</Typography>
+                        <Typography noWrap variant="h4">{(!!me && !!me.company && !!me.company.name) ? me.company.name : ''}</Typography>
                     </div>
                     
                 </div>
 
-				<div className={classes.toolbarItemUser}>
-					<IconButton
-						ref={anchorRef}
-						aria-controls="menu-list-grow"
-						aria-haspopup="true"
-						onClick={handleToggle}
-                        color="inherit"
-					>
-						<i className="fas fa-user-circle"></i>
-					</IconButton>
-					<Popper
-						open={open}
-						anchorEl={anchorRef.current}
-						transition
-						disablePortal
-					>
-						{({ TransitionProps, placement }) => (
-							<Grow
-								{...TransitionProps}
-								style={{
-									transformOrigin:
-										placement === "bottom" ? "center top" : "center bottom"
-								}}
-							>
-								<Paper id="menu-list-grow">
-									<ClickAwayListener onClickAway={handleClose}>
-										<MenuList
-											autoFocusItem={open}
-											onKeyDown={handleListKeyDown}
-										>
-											<MenuItem onClick={handleClose}>Profile</MenuItem>
-											<MenuItem onClick={handleClose}>My account</MenuItem>
-											<MenuItem onClick={logout}>Logout</MenuItem>
-										</MenuList>
-									</ClickAwayListener>
-								</Paper>
-							</Grow>
-						)}
-					</Popper>
-				</div>
-			</Toolbar>
-		</AppBar>
+                <div className={classes.toolbarItemUser}>
+                    <Hidden only={['sm', 'md', 'lg', 'xl']}>
+                        <IconButton
+                            ref={anchorRef}
+                            aria-controls="menu-list-grow"
+                            aria-haspopup="true"
+                            onClick={handleToggle}
+                            color="inherit"
+                        >
+                            <i className="fas fa-user-circle"></i>
+                        </IconButton>
+                    </Hidden>
+                    
+                    <Hidden only="xs">
+                        <Button
+                            ref={anchorRef}
+                            aria-controls="menu-list-grow"
+                            aria-haspopup="true"
+                            onClick={handleToggle}
+                            color="inherit"
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <div
+                                style={{
+                                    marginRight: '10px',
+                                    fontSize: '25px'
+                                }}
+                            >
+                                <i className="fas fa-user-circle"></i>
+                            </div>
+                            {me.name}
+                        </Button>
+                    </Hidden>
+                    
+                    <Popper
+                        open={open}
+                        anchorEl={anchorRef.current}
+                        transition
+                        disablePortal
+                    >
+                        {({ TransitionProps, placement }) => (
+                            <Grow
+                                {...TransitionProps}
+                                style={{
+                                    transformOrigin:
+                                        placement === "bottom" ? "center top" : "center bottom"
+                                }}
+                            >
+                                <Paper id="menu-list-grow">
+                                    <ClickAwayListener onClickAway={handleClose}>
+                                        <MenuList
+                                            autoFocusItem={open}
+                                            onKeyDown={handleListKeyDown}
+                                        >
+                                            <MenuItem onClick={goToProfile}>
+                                                {translations.profile}
+                                            </MenuItem>
+
+                                            {me.role === ROLES.MANAGER &&
+                                                <MenuItem onClick={goToCompany}>
+                                                    {translations.company}
+                                                </MenuItem>
+                                            }
+
+                                            <MenuItem onClick={logout}>
+                                                {translations.logout}
+                                            </MenuItem>
+                                        </MenuList>
+                                    </ClickAwayListener>
+                                </Paper>
+                            </Grow>
+                        )}
+                    </Popper>
+                </div>
+            </Toolbar>
+        </AppBar>
 	);
 };
 

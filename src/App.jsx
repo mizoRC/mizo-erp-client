@@ -5,12 +5,13 @@ import { onError } from 'apollo-link-error';
 import { BrowserRouter } from "react-router-dom";
 import { createBrowserHistory } from "history";
 import Translator from './contextProviders/Translator';
+import Me from './contextProviders/Me';
 import ThemeContainer from './containers/ThemeContainer';
 import { ToastContainer, toast } from 'react-toastify';
 import AppRouter from "./containers/AppRouter";
 
 let toastId;
-const bHistory = createBrowserHistory();
+export const bHistory = createBrowserHistory();
 
 const httpLink = new HttpLink({
     uri: process.env.REACT_APP_API_URL
@@ -32,14 +33,25 @@ const authLink = new ApolloLink((operation, forward) => {
 	return forward(operation);
 });
 
+const printSessionExpiredError = () => {
+	const messages = {
+		es: "Su sesión ha caducado",
+		en: "Session expired"
+	};
+	const selectedLanguage = sessionStorage.getItem("language");
+    return (selectedLanguage && messages[selectedLanguage]) ? messages[selectedLanguage] : messages["es"];
+};
+
 const errorLink = onError(({ graphQLErrors, networkError, operation, response, forward}) => {
     console.error('ERROR_LINK');
 	console.error(graphQLErrors);
 	console.error(networkError);
 
     if(graphQLErrors[0].code === 401){
+        console.info('SESSION EXPIRED');
+        const message = printSessionExpiredError();
         if (!toast.isActive(toastId)) {
-            toastId = toast.error('Invalid Token', {
+            toastId = toast.error(message, {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -47,8 +59,9 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, response, f
                 pauseOnHover: true,
                 draggable: true
             });
-            bHistory.replace('/');
         }
+        sessionStorage.removeItem('token');
+        bHistory.replace('/');
     }
 });
 
@@ -57,15 +70,17 @@ const client = new ApolloClient({
     cache: new InMemoryCache()
 });
 
-function App({history}) {
+function App() {
 	return (
 		<ApolloProvider client={client}>
             <ThemeContainer>
                 <Translator>
-                    <ToastContainer/>
-                    <BrowserRouter>
-                        <AppRouter />
-                    </BrowserRouter>
+                    <Me>
+                        <ToastContainer/>
+                        <BrowserRouter>
+                            <AppRouter />
+                        </BrowserRouter>
+                    </Me>
                 </Translator>
             </ThemeContainer>
 		</ApolloProvider>
