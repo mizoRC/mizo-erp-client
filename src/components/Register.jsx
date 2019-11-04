@@ -387,7 +387,7 @@ const Register = ({history}) => {
                                         </Grid>
                                         
 
-                                        <Grid item xs={12} sm={4} md={4} lg={6}>
+                                        <Grid item xs={12} sm={4} md={4} xl={6}>
                                             <FormControl fullWidth={true}>
                                                 <InputLabel htmlFor="input-company-name">
                                                     {translations.companyName}
@@ -403,7 +403,7 @@ const Register = ({history}) => {
                                                 />
                                             </FormControl>
                                         </Grid>
-                                        <Grid item xs={12} sm={4} md={4} lg={6}>
+                                        <Grid item xs={12} sm={4} md={4} xl={6}>
                                             <FormControl fullWidth={true}>
                                                 <InputLabel htmlFor="input-address">
                                                     {translations.address}
@@ -419,7 +419,7 @@ const Register = ({history}) => {
                                             </FormControl>
                                         </Grid>
 
-                                        <Grid item xs={12} sm={2} md={2} lg={6}>
+                                        <Grid item xs={12} sm={2} md={2} xl={6}>
                                             <FormControl error={errorEmptyCountry} fullWidth={true}>
                                                 <InputLabel htmlFor="country-select">
                                                     {translations.country}
@@ -458,7 +458,7 @@ const Register = ({history}) => {
                                                 </Select>
                                             </FormControl>
                                         </Grid>
-                                        <Grid item xs={12} sm={2} md={2} lg={6}>
+                                        <Grid item xs={12} sm={2} md={2} xl={6}>
                                             <FormControl fullWidth={true}>
                                                 <InputLabel htmlFor="input-phone">
                                                     {translations.phone}

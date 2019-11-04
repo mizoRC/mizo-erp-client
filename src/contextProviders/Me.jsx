@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApolloClient } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
+import { TranslatorContext } from './Translator';
 import { bHistory } from '../App';
 import { execute } from '../utils/graphql';
 import Loading from '../components/Loading';
@@ -34,6 +35,7 @@ const ME = gql`
 const Me = ({children}) => {
     const client = useApolloClient();
     const [me, setMe] = React.useState({});
+    const { updateLanguage } = React.useContext(TranslatorContext);
     const [loading, setLoading] = React.useState(false);
 
     const updateMe = (newMe) => {
@@ -47,6 +49,7 @@ const Me = ({children}) => {
 
             const response = await execute(client, "query", ME, variables);
             if(response && response.data && response.data.me){
+                updateLanguage(response.data.me.language);
                 setMe(response.data.me);
                 setLoading(false);
             }

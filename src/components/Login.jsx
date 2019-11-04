@@ -6,7 +6,6 @@ import { gql } from 'apollo-boost';
 import jwt_decode from 'jwt-decode';
 import { execute } from '../utils/graphql';
 import { TranslatorContext } from '../contextProviders/Translator';
-import { MeContext } from '../contextProviders/Me';
 import CustomCard from '../displayComponents/CustomCard/Card';
 import CustomCardHeader from '../displayComponents/CustomCard/CardHeader';
 import CustomCardBody from '../displayComponents/CustomCard/CardBody';

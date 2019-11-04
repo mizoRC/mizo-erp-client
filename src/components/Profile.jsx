@@ -36,7 +36,7 @@ const useStyles = makeStyles(theme => ({
 const Profile = ({history}) => {
     const classes = useStyles();
     const client = useApolloClient();
-    const { translations } = React.useContext(TranslatorContext);
+    const { translations, updateLanguage } = React.useContext(TranslatorContext);
     const { me } = React.useContext(MeContext);
     const [name, setName] = React.useState(me.name);
     const [surname, setSurname] = React.useState(me.surname);
@@ -44,25 +44,25 @@ const Profile = ({history}) => {
     const [password, setPassword] = React.useState('');
     const [language, setLanguage] = React.useState(me.language);
     const [showPassword, setShowPassword] = React.useState(false);
+    const [newPassword, setNewPassword] = React.useState('');
+    const [showNewPassword, setShowNewPassword] = React.useState(false);
+    const [newPasswordRepeated, setNewPasswordRepeated] = React.useState('');
+    const [showNewPasswordRepeated, setShowNewPasswordRepeated] = React.useState(false);
     const [updateFailed, setUpdateFailed] = React.useState();
     const [errorEmptyName, setErrorEmptyName] = React.useState(false);
     const [errorEmptySurname, setErrorEmptySurname] = React.useState(false);
     const [errorEmptyEmail, setErrorEmptyEmail] = React.useState(false);
     const [errorEmptyPassword, setErrorEmptyPassword] = React.useState(false);
+    const [errorEmptyNewPassword, setErrorEmptyNewPassword] = React.useState(false);
+    const [errorEmptyNewPasswordRepeated, setErrorEmptyNewPasswordRepeated] = React.useState(false);
     const [errorEmptyLanguage, setErrorEmptyLanguage] = React.useState(false);
-    const [errorAlreadyRegisteredEmail, setErrorAlreadyRegisteredEmail] = React.useState(false);
     const [validEmail, setValidEmail] = React.useState(true);
     const [validPassword, setValidPassword] = React.useState(true);
+    const [validNewPassword, setValidNewPassword] = React.useState(true);
+    const [validNewPasswordRepeated, setValidNewPasswordRepeated] = React.useState(true);
+    const [newPasswordsMatch, setNewPasswordsMatch] = React.useState(true);
     const [updating, setUpdating] = React.useState(false);
-
-    /* React.useEffect(() => {
-        setName(me.name);
-        setSurname(me.name);
-        setEmail(me.name);
-        setName(me.name);
-        setName(me.name);
-    }, [me]) */
-    
+    const [incorrectPassword, setIncorrectPassword] = React.useState(false);
 
     const handleChangeName = event => {
         setName(event.target.value);
@@ -86,12 +86,34 @@ const Profile = ({history}) => {
         setPassword(newPassword);
     };
 
+    const handleChangeNewPassword = event => {
+        const newPassword = event.target.value;
+        const isValidPassword = newPassword.length >= 8;
+        setValidNewPassword(isValidPassword);
+        setNewPassword(newPassword);
+    };
+
+    const handleChangeNewPasswordRepeated = event => {
+        const newPassword = event.target.value;
+        const isValidPassword = newPassword.length >= 8;
+        setValidNewPasswordRepeated(isValidPassword);
+        setNewPasswordRepeated(newPassword);
+    };
+
     const handleChangeLanguage = event => {
         setLanguage(event.target.value);
     };
 
     const handleClickShowPassword = () => {
         setShowPassword(!showPassword);
+    };
+
+    const handleClickShowNewPassword = () => {
+        setShowNewPassword(!showNewPassword);
+    };
+
+    const handleClickShowNewPasswordRepeated = () => {
+        setShowNewPasswordRepeated(!showNewPasswordRepeated);
     };
 
     const handleMouseDownPassword = event => {
@@ -111,6 +133,7 @@ const Profile = ({history}) => {
         if(!hasErrors){
             try {
                 setUpdating(true);
+                setUpdateFailed(false);
                 const mutation = gql`
                     mutation updateEmployee(
                         $updateInfo: UpdateEmployeeInfo!
@@ -122,14 +145,22 @@ const Profile = ({history}) => {
                         }
                     }
                 `;
+                const updateInfo = {
+                    name: name,
+                    surname: surname,
+                    email: email,
+                    password: password,
+                    language: language
+                };
+                const isEmptyNewPassword = (!newPassword || newPassword === "" || newPassword === null) ? true : false;
+                const isEmptyNewPasswordRepeated = (!newPasswordRepeated || newPasswordRepeated === "" || newPasswordRepeated === null) ? true : false;
+                if(!isEmptyNewPassword && !isEmptyNewPasswordRepeated){
+                    updateInfo.newPassword = newPassword;
+                    updateInfo.newPasswordRepeated = newPasswordRepeated;
+                }
+
                 let variables = {
-                    updateInfo: {
-                        name: name,
-                        surname: surname,
-                        email: email,
-                        password: password,
-                        language: language
-                    }
+                    updateInfo: updateInfo
                 };
 
                 const response = await execute(client, "mutation", mutation, variables);
@@ -137,9 +168,9 @@ const Profile = ({history}) => {
                 if(!!response && !!response.data && !!response.data.updateEmployee && !!response.data.updateEmployee.token){
                     const token = response.data.updateEmployee.token;
                     sessionStorage.setItem("token", token);
-                    setErrorAlreadyRegisteredEmail(false);
                     setUpdating(false);
-                    let decodedToken = jwt_decode(response.data.register.token);
+                    let decodedToken = jwt_decode(response.data.updateEmployee.token);
+                    updateLanguage(decodedToken.employee.language);
                     history.replace(`/dashboard/${decodedToken.employee.id}`);
                 }
                 else{
@@ -147,13 +178,13 @@ const Profile = ({history}) => {
                     setUpdateFailed(true);
                 }
             } catch (error) {
-                setUpdating(false);
-                if(error.includes("Email already registered")){
-                    setErrorAlreadyRegisteredEmail(true);
+                if(error.includes('Password not match')){
+                    setIncorrectPassword(true);
                 }
                 else{
                     setUpdateFailed(true);
                 }
+                setUpdating(false);
             }
             
         }
@@ -166,6 +197,9 @@ const Profile = ({history}) => {
         const isEmptySurname = (!surname || surname === "" || surname === null) ? true : false;
         const isEmptyEmail = (!email || email === "" || email === null) ? true : false;
         const isEmptyPassword = (!password || password === "" || password === null) ? true : false;
+        const isEmptyNewPassword = (!newPassword || newPassword === "" || newPassword === null) ? true : false;
+        const isEmptyNewPasswordRepeated = (!newPasswordRepeated || newPasswordRepeated === "" || newPasswordRepeated === null) ? true : false;
+        const matchNewPwd = newPassword === newPasswordRepeated;
         const isEmptyLanguage = (!language || language === "" || language === null) ? true : false;
 
         setErrorEmptyName(isEmptyName);
@@ -174,7 +208,19 @@ const Profile = ({history}) => {
         setErrorEmptyPassword(isEmptyPassword);
         setErrorEmptyLanguage(isEmptyLanguage);
 
-        hasErrors = isEmptyName || isEmptySurname || isEmptyEmail || isEmptyPassword || isEmptyLanguage || !validEmail || !validPassword;
+        if(!isEmptyNewPassword || !isEmptyNewPasswordRepeated){
+            if(!isEmptyNewPassword && !isEmptyNewPasswordRepeated){
+                setNewPasswordsMatch(matchNewPwd);
+            }
+
+            setErrorEmptyNewPassword(isEmptyNewPassword);
+            setErrorEmptyNewPasswordRepeated(isEmptyNewPasswordRepeated);
+
+            hasErrors = isEmptyName || isEmptySurname || isEmptyEmail || isEmptyPassword || isEmptyNewPassword || isEmptyNewPasswordRepeated || isEmptyLanguage || !validEmail || !validPassword || !validNewPassword || !validNewPasswordRepeated || !matchNewPwd;
+        }
+        else{
+            hasErrors = isEmptyName || isEmptySurname || isEmptyEmail || isEmptyPassword || isEmptyLanguage || !validEmail || !validPassword;
+        }
 
         return hasErrors;
     };
@@ -274,7 +320,7 @@ const Profile = ({history}) => {
                                 </Grid>
                                 
                                 <Grid item xs={12} sm={6} md={6}>
-                                    <FormControl fullWidth={true}>
+                                    <FormControl fullWidth={true} disabled>
                                         <InputLabel htmlFor="input-email">
                                             {translations.email}
                                         </InputLabel>
@@ -283,7 +329,7 @@ const Profile = ({history}) => {
                                             type={'text'}
                                             value={email}
                                             onChange={handleChangeEmail}
-                                            error={errorEmptyEmail || errorAlreadyRegisteredEmail || !validEmail}
+                                            error={errorEmptyEmail || !validEmail}
                                             fullWidth={true}
                                             onKeyPress={handleEnterKey}
                                         />
@@ -295,7 +341,7 @@ const Profile = ({history}) => {
                                 <Grid item xs={12} sm={6} md={6}>
                                     <FormControl fullWidth={true}>
                                         <InputLabel htmlFor="adornment-password">
-                                            {translations.password}
+                                            {translations.currentPassword}
                                         </InputLabel>
                                         <Input
                                             id="adornment-password"
@@ -325,6 +371,73 @@ const Profile = ({history}) => {
                                         }
                                     </FormControl>
                                 </Grid>
+
+                                <Grid item xs={12} sm={6} md={6}>
+                                    <FormControl fullWidth={true}>
+                                        <InputLabel htmlFor="adornment-newpassword">
+                                            {translations.newPassword}
+                                        </InputLabel>
+                                        <Input
+                                            id="adornment-newpassword"
+                                            type={showNewPassword ? 'text' : 'password'}
+                                            value={newPassword}
+                                            onChange={handleChangeNewPassword}
+                                            error={errorEmptyNewPassword || !validNewPassword}
+                                            onKeyPress={handleEnterKey}
+                                            endAdornment={
+                                                <InputAdornment position="end">
+                                                    <IconButton
+                                                        aria-label="toggle password visibility"
+                                                        onClick={handleClickShowNewPassword}
+                                                        onMouseDown={handleMouseDownPassword}
+                                                    >
+                                                        {showNewPassword ? 
+                                                                <i className="far fa-eye"></i>
+                                                            : 
+                                                                <i className="far fa-eye-slash"></i>
+                                                        }
+                                                    </IconButton>
+                                                </InputAdornment>
+                                            }
+                                        />
+                                        {!validNewPassword &&
+                                            <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
+                                        }
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={12} sm={6} md={6}>
+                                    <FormControl fullWidth={true}>
+                                        <InputLabel htmlFor="adornment-newpasswordrepeat">
+                                            {translations.newPasswordRepeated}
+                                        </InputLabel>
+                                        <Input
+                                            id="adornment-newpasswordrepeat"
+                                            type={showNewPasswordRepeated ? 'text' : 'password'}
+                                            value={newPasswordRepeated}
+                                            onChange={handleChangeNewPasswordRepeated}
+                                            error={errorEmptyNewPasswordRepeated || !validNewPasswordRepeated}
+                                            onKeyPress={handleEnterKey}
+                                            endAdornment={
+                                                <InputAdornment position="end">
+                                                    <IconButton
+                                                        aria-label="toggle password visibility"
+                                                        onClick={handleClickShowNewPasswordRepeated}
+                                                        onMouseDown={handleMouseDownPassword}
+                                                    >
+                                                        {showNewPasswordRepeated ? 
+                                                                <i className="far fa-eye"></i>
+                                                            : 
+                                                                <i className="far fa-eye-slash"></i>
+                                                        }
+                                                    </IconButton>
+                                                </InputAdornment>
+                                            }
+                                        />
+                                        {!validNewPasswordRepeated &&
+                                            <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
+                                        }
+                                    </FormControl>
+                                </Grid>
                             </Grid> 
                         </CustomCardBody>
                         <CustomCardFooter
@@ -336,14 +449,14 @@ const Profile = ({history}) => {
                                 justifyContent: 'center'
                             }}
                         >
-                            {errorAlreadyRegisteredEmail &&
+                            {!newPasswordsMatch &&
                                 <div
                                     style={{
                                         marginBottom: '10px',
                                         color: error
                                     }}
                                 >
-                                    {translations.emailAlreadyRegistered}
+                                    {translations.passwordsDontMatch}
                                 </div>
                             }
 
@@ -358,10 +471,22 @@ const Profile = ({history}) => {
                                 </div>
                             }
 
+                            {incorrectPassword &&
+                                <div
+                                    style={{
+                                        marginBottom: '10px',
+                                        color: error
+                                    }}
+                                >
+                                    {translations.incorrectPassword}
+                                </div>
+                            }
+
                             <Button 
                                 variant="contained" 
                                 color="primary"
                                 disabled={updating}
+                                onClick={update}
                             >
                                 <div
                                     style={{

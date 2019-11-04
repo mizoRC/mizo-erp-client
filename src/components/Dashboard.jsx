@@ -4,6 +4,7 @@ import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/react-hooks';
 import { TranslatorContext } from '../contextProviders/Translator';
 import { MeContext } from '../contextProviders/Me';
+import useDisplayBreakpoints from '../contextProviders/useDisplayBreakpoints';
 import * as mainStyles from '../styles';
 import Bar from './Bar';
 import Loading  from './Loading';
@@ -15,7 +16,23 @@ import accountingIcon from '../assets/wealth.svg';
 import satIcon from '../assets/maintenance.svg';
 
 const useStyles = makeStyles(theme => ({
-    ...mainStyles
+    ...mainStyles,
+    cardSlim: {
+        width: '200px', 
+        height: '200px'
+    },
+    cardXL: {
+        width: '300px', 
+        height: '300px'
+    },
+    cardSlimImg: {
+        width: '100px', 
+        height: '100px'
+    },
+    cardXLImg: {
+        width: '200px', 
+        height: '200px'
+    }
 }));
 
 const ME = gql`
@@ -38,29 +55,38 @@ const ME = gql`
     }
 `;
 
-const GridCard = ({title, img, action}) => (
-    <Card>
-        <CardActionArea onClick={action}>
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingTop: '15px',
-                    paddingLeft: '15px',
-                    paddingRight: '15px'
-                }}
-            >
-                <img alt="Employees" src={img} style={{ width: 'auto', height: '150px' }} />
-            </div>
-            <CardContent style={{textAlign: 'center'}}>
-                <Typography variant="h5">
-                    {title}
-                </Typography>
-            </CardContent>
-        </CardActionArea>
-    </Card>
-)
+const GridCard = ({title, img, action}) => {
+    const classes = useStyles();
+    const breakpoint = useDisplayBreakpoints();
+
+    return(
+        <Card className={(breakpoint === "xs" || breakpoint === "sm" || breakpoint === "md" || breakpoint === "lg") ? classes.cardSlim : classes.cardXL}>
+            <CardActionArea onClick={action} style={{height: '100%', width: '100%'}}>
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingTop: '15px',
+                        paddingLeft: '15px',
+                        paddingRight: '15px'
+                    }}
+                >
+                    <img 
+                        alt="Employees" 
+                        src={img} 
+                        className={(breakpoint === "xs" || breakpoint === "sm" || breakpoint === "md" || breakpoint === "lg") ? classes.cardSlimImg : classes.cardXLImg}
+                    />
+                </div>
+                <CardContent style={{textAlign: 'center'}}>
+                    <Typography variant="h5">
+                        {title}
+                    </Typography>
+                </CardContent>
+            </CardActionArea>
+        </Card>
+    )
+}
 
 const Dashboard = () => {
     const classes = useStyles();
