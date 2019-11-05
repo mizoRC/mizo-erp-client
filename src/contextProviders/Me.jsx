@@ -4,10 +4,11 @@ import { gql } from 'apollo-boost';
 import { TranslatorContext } from './Translator';
 import { bHistory } from '../App';
 import { execute } from '../utils/graphql';
-import Loading from '../components/Loading';
+import Loading from '../components/Segments/Loading';
 const MeContext = React.createContext({
     me:{},
-    updateMe: null
+    updateMe: null,
+    refreshMe: null
 });
 
 export { MeContext };
@@ -27,19 +28,25 @@ const ME = gql`
                 country
                 address
                 phone
+                logo
             }
         }
     }
 `;
 
 const Me = ({children}) => {
+    const token = sessionStorage.getItem('token');
     const client = useApolloClient();
     const [me, setMe] = React.useState({});
     const { updateLanguage } = React.useContext(TranslatorContext);
-    const [loading, setLoading] = React.useState(false);
+    const [loading, setLoading] = React.useState(true);
 
     const updateMe = (newMe) => {
         setMe(newMe);
+    }
+
+    const refreshMe = () => {
+        getMe();
     }
 
     const getMe = async() => {
@@ -64,12 +71,9 @@ const Me = ({children}) => {
     }
 
     React.useEffect(() => {
-        console.info('ME');
-        const token = sessionStorage.getItem('token');
-        if(token && !me.id){
-            getMe();
-        } 
-
+        if(token && !me.id) getMe();
+        if(token && me.id) setLoading(false);
+        
         if(!token) bHistory.replace('/');
     });
 
@@ -81,7 +85,8 @@ const Me = ({children}) => {
                     <MeContext.Provider 
                         value={{
                             me:me,
-                            updateMe: updateMe
+                            updateMe: updateMe,
+                            refreshMe: refreshMe
                         }}
                     >
                         {children}

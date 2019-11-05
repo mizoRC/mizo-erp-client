@@ -1,11 +1,11 @@
 import React from "react";
 import { AppBar, Toolbar, IconButton, MenuList, MenuItem, Popper, Grow, Paper, ClickAwayListener, Typography, Hidden, Button, makeStyles } from "@material-ui/core";
 import { withRouter } from 'react-router-dom';
-import { TranslatorContext } from '../contextProviders/Translator';
-import { MeContext } from '../contextProviders/Me';
-import { ROLES } from '../constants';
-import logoComplete from '../assets/logo_complete_white.svg';
-import logo from '../assets/logo_white.svg';
+import { TranslatorContext } from '../../contextProviders/Translator';
+import { MeContext } from '../../contextProviders/Me';
+import { ROLES } from '../../constants';
+import logoComplete from '../../assets/logo_complete_white.svg';
+import logo from '../../assets/logo_white.svg';
 
 const useStyles = makeStyles(theme => ({
 	appBarTransparent: {

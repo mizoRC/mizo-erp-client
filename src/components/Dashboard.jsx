@@ -1,13 +1,14 @@
 import React from "react";
 import { Grid, Card, CardActionArea, CardContent, Typography, makeStyles } from '@material-ui/core';
 import { gql } from 'apollo-boost';
+import { withRouter } from 'react-router-dom';
 import { useQuery } from '@apollo/react-hooks';
 import { TranslatorContext } from '../contextProviders/Translator';
 import { MeContext } from '../contextProviders/Me';
 import useDisplayBreakpoints from '../contextProviders/useDisplayBreakpoints';
 import * as mainStyles from '../styles';
-import Bar from './Bar';
-import Loading  from './Loading';
+import Bar from './Segments/Bar';
+import Loading  from './Segments/Loading';
 import employeesIcon from '../assets/group.svg';
 import crmIcon from '../assets/crm.svg';
 import productsIcon from '../assets/barcode.svg';
@@ -50,6 +51,7 @@ const ME = gql`
                 country
                 address
                 phone
+                logo
             }
         }
     }
@@ -88,11 +90,18 @@ const GridCard = ({title, img, action}) => {
     )
 }
 
-const Dashboard = () => {
+const Dashboard = ({history}) => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
     const { updateMe } = React.useContext(MeContext);
     const { loading, data } = useQuery(ME);
+    /* const { loading, data } = useQuery(ME, {
+        fetchPolicy: "network-only"
+    }); */
+
+    const goToModule = route => {
+        history.push(route);
+    }
 
     React.useEffect(() => {
         if(!!data && data.me) updateMe(data.me);
@@ -124,27 +133,27 @@ const Dashboard = () => {
                         >
                             <Grid container spacing={3} style={{maxWidth: '800px', maxHeight: 'calc(100% - 120px)', overflow: 'auto'}}>
                                 <Grid className={classes.centered} item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.employees} img={employeesIcon} action={() => {}}/>
+                                    <GridCard title={translations.employees} img={employeesIcon} action={() => {goToModule(`/employees/${data.me.company.id}`)}}/>
                                 </Grid>
 
                                 <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.crm} img={crmIcon} action={() => {}}/>
+                                    <GridCard title={translations.crm} img={crmIcon} action={() => {goToModule(`/crm/${data.me.company.id}`)}}/>
                                 </Grid>
 
                                 <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.products} img={productsIcon} action={() => {}}/>
+                                    <GridCard title={translations.products} img={productsIcon} action={() => {goToModule(`/products/${data.me.company.id}`)}}/>
                                 </Grid>
 
                                 <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.accounting} img={accountingIcon} action={() => {}}/>
+                                    <GridCard title={translations.accounting} img={accountingIcon} action={() => {goToModule(`/accounting/${data.me.company.id}`)}}/>
                                 </Grid>
 
                                 <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.pos} img={posIcon} action={() => {}}/>
+                                    <GridCard title={translations.pos} img={posIcon} action={() => {goToModule(`/pos/${data.me.id}`)}}/>
                                 </Grid>
 
                                 <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.sat} img={satIcon} action={() => {}}/>
+                                    <GridCard title={translations.sat} img={satIcon} action={() => {goToModule(`/sat/${data.me.company.id}`)}}/>
                                 </Grid>
                             </Grid>
                         </div>
@@ -154,4 +163,4 @@ const Dashboard = () => {
 	);
 };
 
-export default Dashboard;
+export default withRouter(Dashboard);

@@ -4,16 +4,16 @@ import { useApolloClient } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import jwt_decode from 'jwt-decode';
 import { withRouter } from 'react-router-dom';
-import { execute } from '../utils/graphql';
-import { TranslatorContext } from '../contextProviders/Translator';
-import useDisplayBreakpoints from '../contextProviders/useDisplayBreakpoints';
-import { mainCountries, countries } from '../datasheets/countries';
-import { languages } from '../datasheets/languages';
-import { CustomCard, CustomCardHeader, CustomCardBody, CustomCardFooter } from '../displayComponents/CustomCard';
-import { primary, tertiary, error } from '../styles/colors';
-import * as mainStyles from '../styles';
-import bgImage from '../assets/fondo.png';
-import logoComplete from '../assets/logo_complete_white.svg';
+import { execute } from '../../utils/graphql';
+import { TranslatorContext } from '../../contextProviders/Translator';
+import useDisplayBreakpoints from '../../contextProviders/useDisplayBreakpoints';
+import { mainCountries, countries } from '../../datasheets/countries';
+import { languages } from '../../datasheets/languages';
+import { CustomCard, CustomCardHeader, CustomCardBody, CustomCardFooter } from '../../displayComponents/CustomCard';
+import { primary, tertiary, error } from '../../styles/colors';
+import * as mainStyles from '../../styles';
+import bgImage from '../../assets/fondo.png';
+import logoComplete from '../../assets/logo_complete_white.svg';
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles,

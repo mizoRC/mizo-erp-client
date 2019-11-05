@@ -4,14 +4,14 @@ import { useApolloClient } from '@apollo/react-hooks';
 import { withRouter, Link } from 'react-router-dom';
 import { gql } from 'apollo-boost';
 import jwt_decode from 'jwt-decode';
-import { execute } from '../utils/graphql';
-import { TranslatorContext } from '../contextProviders/Translator';
-import CustomCard from '../displayComponents/CustomCard/Card';
-import CustomCardHeader from '../displayComponents/CustomCard/CardHeader';
-import CustomCardBody from '../displayComponents/CustomCard/CardBody';
-import * as mainStyles from '../styles';
-import bgImage from '../assets/fondo.png';
-import logo from '../assets/logo_white.svg';
+import { execute } from '../../utils/graphql';
+import { TranslatorContext } from '../../contextProviders/Translator';
+import CustomCard from '../../displayComponents/CustomCard/Card';
+import CustomCardHeader from '../../displayComponents/CustomCard/CardHeader';
+import CustomCardBody from '../../displayComponents/CustomCard/CardBody';
+import * as mainStyles from '../../styles';
+import bgImage from '../../assets/fondo.png';
+import logo from '../../assets/logo_white.svg';
 
 
 const useStyles = makeStyles(theme => ({

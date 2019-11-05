@@ -2,7 +2,7 @@ import React from 'react';
 import { gql } from 'apollo-boost';
 import { useApolloClient } from '@apollo/react-hooks';
 import { execute } from '../utils/graphql';
-import Loading from '../components/Loading';
+import Loading from '../components/Segments/Loading';
 const TranslatorContext = React.createContext({
     translations: []
 });

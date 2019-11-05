@@ -4,14 +4,14 @@ import { useApolloClient } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import jwt_decode from 'jwt-decode';
 import { withRouter } from 'react-router-dom';
-import { execute } from '../utils/graphql';
-import { TranslatorContext } from '../contextProviders/Translator';
-import { MeContext } from '../contextProviders/Me';
-import { languages } from '../datasheets/languages';
-import { CustomCard, CustomCardHeader, CustomCardBody, CustomCardFooter } from '../displayComponents/CustomCard';
-import { error } from '../styles/colors';
-import * as mainStyles from '../styles';
-import Bar from './Bar';
+import { execute } from '../../utils/graphql';
+import { TranslatorContext } from '../../contextProviders/Translator';
+import { MeContext } from '../../contextProviders/Me';
+import { languages } from '../../datasheets/languages';
+import { CustomCard, CustomCardHeader, CustomCardBody, CustomCardFooter } from '../../displayComponents/CustomCard';
+import { error } from '../../styles/colors';
+import * as mainStyles from '../../styles';
+import Bar from '../Segments/Bar';
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles,
@@ -37,7 +37,7 @@ const Profile = ({history}) => {
     const classes = useStyles();
     const client = useApolloClient();
     const { translations, updateLanguage } = React.useContext(TranslatorContext);
-    const { me } = React.useContext(MeContext);
+    const { me, refreshMe } = React.useContext(MeContext);
     const [name, setName] = React.useState(me.name);
     const [surname, setSurname] = React.useState(me.surname);
     const [email, setEmail] = React.useState(me.email);
@@ -171,6 +171,7 @@ const Profile = ({history}) => {
                     setUpdating(false);
                     let decodedToken = jwt_decode(response.data.updateEmployee.token);
                     updateLanguage(decodedToken.employee.language);
+                    refreshMe();
                     history.replace(`/dashboard/${decodedToken.employee.id}`);
                 }
                 else{
