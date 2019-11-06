@@ -42,10 +42,34 @@ const ADD_EMPLOYEE = gql`
     }
 `;
 
-/* const mockData = [
-    { name: 'Mehmet', surname: 'Baran', email: 'mehmet@gmail.com', language: 2, role: ROLES.MANAGER },
-    { name: 'Zerya Betül', surname: 'Baran', email: 'zerya@gmail.com', language: 1,  role: ROLES.SELLER },
-] */
+const UPDATE_EMPLOYEE = gql`
+    mutation updateEmployee($employee: EmployeeInputUpdate!) {
+        updateEmployee(employee: $employee) {
+            id
+            name
+            surname
+            email
+            language
+            role
+            password
+        }
+    }
+`;
+
+const UNSUBSCRIBE_EMPLOYEE = gql`
+    mutation unsubscribeEmployee($employeeId: Int!) {
+        unsubscribeEmployee(employeeId: $employeeId) {
+            id
+            name
+            surname
+            email
+            language
+            role
+            password
+        }
+    }
+`;
+
 
 const Employees = () => {
     const classes = useStyles();
@@ -55,6 +79,14 @@ const Employees = () => {
         fetchPolicy: "network-only"
     });
     const [ addEmployee, { loading: addEmployeeLoading, error: addEmployeeError }] = useMutation(ADD_EMPLOYEE, {
+        refetchQueries: [{query: EMPLOYEES}],
+        awaitRefetchQueries: true
+    });
+    const [ updateEmployee, { loading: updateEmployeeLoading, error: updateEmployeeError }] = useMutation(UPDATE_EMPLOYEE, {
+        refetchQueries: [{query: EMPLOYEES}],
+        awaitRefetchQueries: true
+    });
+    const [ unsubscribeEmployee, { loading: unsubscribeEmployeeLoading, error: unsubscribeEmployeeError }] = useMutation(UNSUBSCRIBE_EMPLOYEE, {
         refetchQueries: [{query: EMPLOYEES}],
         awaitRefetchQueries: true
     });
@@ -109,7 +141,6 @@ const Employees = () => {
                                 editable={{
                                     onRowAdd: async(newData) => {
                                         if(newData.name && newData.surname && newData.email && newData.language && newData.role){
-                                            console.info('NEW DATA', newData);
                                             await addEmployee({ variables: { employee:newData } });
                                             return;
                                         }
@@ -118,10 +149,20 @@ const Employees = () => {
                                         }
                                     },
                                     onRowUpdate: async(newData, oldData) => {
-                                        return;
+                                        if(newData.name && newData.surname && newData.email && newData.language && newData.role){
+                                            const {password, __typename, ...newEmployee} = newData;
+                                            await updateEmployee({ variables: { employee:newEmployee } });
+                                            return;
+                                        }
+                                        else{
+                                            alert('Empleado no creado. Es necesario cubrir todos los campos para poder crearlo.');
+                                        }
                                     },
                                     onRowDelete: async(oldData) => {
-                                        return;
+                                        if(oldData.id){
+                                            await unsubscribeEmployee({ variables: { employeeId:oldData.id } });
+                                            return;
+                                        }
                                     }
                                 }}
                             />
