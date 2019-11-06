@@ -35,6 +35,12 @@ const ME = gql`
     }
 `;
 
+const getCurrentRouteNotLogged = () => {
+    const currentRoute = bHistory.location.pathname;
+    const route = (currentRoute !== "/" && currentRoute !== "/signup" && !currentRoute.includes("/register/")) ? "/" : currentRoute;
+    return route;
+}
+
 const Me = ({children}) => {
     const token = sessionStorage.getItem('token');
     const client = useApolloClient();
@@ -79,7 +85,10 @@ const Me = ({children}) => {
         if(token && (!me || !me.id)) getMe();
         if(token && !!me && me.id) setLoading(false);
         
-        if(!token) bHistory.replace('/');
+        if(!token){
+            const currentRoute = getCurrentRouteNotLogged();
+            bHistory.replace(currentRoute);
+        }
     });
 
     return(

@@ -1,8 +1,8 @@
 import React from "react";
 import { AppBar, Toolbar, IconButton, MenuList, MenuItem, Popper, Grow, Paper, ClickAwayListener, Typography, Hidden, Button, makeStyles } from "@material-ui/core";
 import { withRouter } from 'react-router-dom';
+import jwt_decode from 'jwt-decode';
 import { TranslatorContext } from '../../contextProviders/Translator';
-import { MeContext } from '../../contextProviders/Me';
 import { ROLES } from '../../constants';
 import logoComplete from '../../assets/logo_complete_white.svg';
 import logo from '../../assets/logo_white.svg';
@@ -38,8 +38,10 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const Bar = ({history, transparent}) => {
+    const token = sessionStorage.getItem("token");
+    const decodedToken = jwt_decode(token);
+    const me = decodedToken.employee;
     const classes = useStyles();
-    const { me, clearMe } = React.useContext(MeContext);
     const { translations } = React.useContext(TranslatorContext);
 	const [open, setOpen] = React.useState(false);
 	const anchorRef = React.useRef(null);
@@ -65,7 +67,6 @@ const Bar = ({history, transparent}) => {
 
     const logout = () => {
         sessionStorage.clear();
-        clearMe();
         history.replace('/login');
     };
 

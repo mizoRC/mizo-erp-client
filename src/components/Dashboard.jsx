@@ -4,7 +4,6 @@ import { gql } from 'apollo-boost';
 import { withRouter } from 'react-router-dom';
 import { useQuery } from '@apollo/react-hooks';
 import { TranslatorContext } from '../contextProviders/Translator';
-import { MeContext } from '../contextProviders/Me';
 import useDisplayBreakpoints from '../contextProviders/useDisplayBreakpoints';
 import * as mainStyles from '../styles';
 import Bar from './Segments/Bar';
@@ -93,7 +92,6 @@ const GridCard = ({title, img, action}) => {
 const Dashboard = ({history}) => {
     const classes = useStyles();
     const { translations, updateLanguage } = React.useContext(TranslatorContext);
-    const { updateMe } = React.useContext(MeContext);
     const { loading, data } = useQuery(ME);
     /* const { loading, data } = useQuery(ME, {
         fetchPolicy: "network-only"
@@ -105,7 +103,6 @@ const Dashboard = ({history}) => {
 
     React.useEffect(() => {
         if(!!data && data.me){
-            updateMe(data.me);
             updateLanguage(data.me.language);
         }
     }, [data]);
