@@ -135,10 +135,10 @@ const Profile = ({history}) => {
                 setUpdating(true);
                 setUpdateFailed(false);
                 const mutation = gql`
-                    mutation updateEmployee(
-                        $updateInfo: UpdateEmployeeInfo!
+                    mutation updateEmployeeMe(
+                        $updateInfo: UpdateEmployeeMeInfo!
                     ) {
-                        updateEmployee(
+                        updateEmployeeMe(
                             updateInfo:$updateInfo
                         ) {
                             token
@@ -165,11 +165,11 @@ const Profile = ({history}) => {
 
                 const response = await execute(client, "mutation", mutation, variables);
 
-                if(!!response && !!response.data && !!response.data.updateEmployee && !!response.data.updateEmployee.token){
-                    const token = response.data.updateEmployee.token;
+                if(!!response && !!response.data && !!response.data.updateEmployeeMe && !!response.data.updateEmployeeMe.token){
+                    const token = response.data.updateEmployeeMe.token;
                     sessionStorage.setItem("token", token);
                     setUpdating(false);
-                    let decodedToken = jwt_decode(response.data.updateEmployee.token);
+                    let decodedToken = jwt_decode(response.data.updateEmployeeMe.token);
                     updateLanguage(decodedToken.employee.language);
                     refreshMe();
                     history.replace(`/dashboard/${decodedToken.employee.id}`);
