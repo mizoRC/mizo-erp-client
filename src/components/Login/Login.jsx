@@ -6,7 +6,7 @@ import { gql } from 'apollo-boost';
 import jwt_decode from 'jwt-decode';
 import { execute } from '../../utils/graphql';
 import { TranslatorContext } from '../../contextProviders/Translator';
-// import withTranslations from '../../contextProviders/withTranslations';
+import { MeContext } from '../../contextProviders/Me';
 import CustomCard from '../../displayComponents/CustomCard/Card';
 import CustomCardHeader from '../../displayComponents/CustomCard/CardHeader';
 import CustomCardBody from '../../displayComponents/CustomCard/CardBody';
@@ -59,6 +59,7 @@ const Login = ({history}) => {
     const classes = useStyles();
     const client = useApolloClient();
     const { translations } = React.useContext(TranslatorContext);
+    const { refreshMe } = React.useContext(MeContext);
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [loginFailed, setLoginFailed] = React.useState(false);
@@ -110,6 +111,7 @@ const Login = ({history}) => {
                     sessionStorage.setItem("token", token);
                     setLoginFailed(false);
                     let decodedToken = jwt_decode(response.data.login.token);
+                    refreshMe();
                     history.replace(`/dashboard/${decodedToken.employee.id}`);
                 }
                 else{

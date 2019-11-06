@@ -76,8 +76,8 @@ const Me = ({children}) => {
     }
 
     React.useEffect(() => {
-        if(token && !me.id) getMe();
-        if(token && me.id) setLoading(false);
+        if(token && (!me || !me.id)) getMe();
+        if(token && !!me && me.id) setLoading(false);
         
         if(!token) bHistory.replace('/');
     });
