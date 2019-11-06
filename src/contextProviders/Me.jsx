@@ -8,7 +8,8 @@ import Loading from '../components/Segments/Loading';
 const MeContext = React.createContext({
     me:{},
     updateMe: null,
-    refreshMe: null
+    refreshMe: null,
+    clearMe: null
 });
 
 export { MeContext };
@@ -39,7 +40,7 @@ const Me = ({children}) => {
     const client = useApolloClient();
     const [me, setMe] = React.useState({});
     const { updateLanguage } = React.useContext(TranslatorContext);
-    const [loading, setLoading] = React.useState(true);
+    const [loading, setLoading] = React.useState(false);
 
     const updateMe = (newMe) => {
         setMe(newMe);
@@ -47,6 +48,10 @@ const Me = ({children}) => {
 
     const refreshMe = () => {
         getMe();
+    }
+
+    const clearMe = () => {
+        setMe();
     }
 
     const getMe = async() => {
@@ -86,7 +91,8 @@ const Me = ({children}) => {
                         value={{
                             me:me,
                             updateMe: updateMe,
-                            refreshMe: refreshMe
+                            refreshMe: refreshMe,
+                            clearMe: clearMe
                         }}
                     >
                         {children}
