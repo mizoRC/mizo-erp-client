@@ -92,7 +92,7 @@ const GridCard = ({title, img, action}) => {
 
 const Dashboard = ({history}) => {
     const classes = useStyles();
-    const { translations } = React.useContext(TranslatorContext);
+    const { translations, updateLanguage } = React.useContext(TranslatorContext);
     const { updateMe } = React.useContext(MeContext);
     const { loading, data } = useQuery(ME);
     /* const { loading, data } = useQuery(ME, {
@@ -104,7 +104,10 @@ const Dashboard = ({history}) => {
     }
 
     React.useEffect(() => {
-        if(!!data && data.me) updateMe(data.me);
+        if(!!data && data.me){
+            updateMe(data.me);
+            updateLanguage(data.me.language);
+        }
     }, [data]);
 
 	return (
