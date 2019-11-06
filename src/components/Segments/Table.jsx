@@ -5,31 +5,35 @@ import { TranslatorContext } from '../../contextProviders/Translator';
 const Table = ({title, columns, data, editable}) => {
     const { translations } = React.useContext(TranslatorContext);
     const localization = {
+        header: { 
+            actions: translations.actions
+        },
         body: {
-            addTooltip: "Añadir",
-            editTooltip: "Editar",
-            deleteTooltip: "Borrar",
+            emptyDataSourceMessage: translations.noRecords,
+            addTooltip: translations.add,
+            editTooltip: translations.edit,
+            deleteTooltip: translations.delete,
             editRow: {
-                cancelTooltip: "Cancelar",
-                saveTooltip: "Guardar",
-                deleteText: "¿Estás seguro de que quieres borrarla?"
+                cancelTooltip: translations.cancel,
+                saveTooltip: translations.save,
+                deleteText: translations.sureDelete
             }
         },
         toolbar: {
-            searchPlaceholder: "Buscar",
-            searchTooltip: "Buscar"
+            searchPlaceholder: translations.search,
+            searchTooltip: translations.search
         },
         pagination: {
-            labelRowsSelect: 'filas',
-            labelDisplayedRows: "{from}-{to} de {count}",
-            firstAriaLabel: "Primera página",
-            firstTooltip: "Primera página",
-            previousAriaLabel: "Página anterior",
-            previousTooltip: "Página anterior",
-            nextAriaLabel: "Siguiente página",
-            nextTooltip: "Siguiente página",
-            lastAriaLabel: "Última página",
-            lastTooltip: "Última página",
+            labelRowsSelect: translations.rowsLowercase,
+            labelDisplayedRows: translations.labelDisplayedRows || "{from}-{to} de {count}",
+            firstAriaLabel: translations.firstPage,
+            firstTooltip: translations.firstPage,
+            previousAriaLabel: translations.previousPage,
+            previousTooltip: translations.previousPage,
+            nextAriaLabel: translations.nextPage,
+            nextTooltip: translations.nextPage,
+            lastAriaLabel: translations.lastPage,
+            lastTooltip: translations.lastPage,
         }
     };
 
