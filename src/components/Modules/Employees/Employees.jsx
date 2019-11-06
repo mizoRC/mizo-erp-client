@@ -1,10 +1,9 @@
 import React from 'react';
-import { Grid, Card, CardActionArea, CardContent, Typography, makeStyles } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core';
 import { gql } from 'apollo-boost';
-import { useQuery } from '@apollo/react-hooks';
-import MaterialTable from 'material-table';
+import { useQuery, useMutation } from '@apollo/react-hooks';
 import { TranslatorContext } from '../../../contextProviders/Translator';
-import { MeContext } from '../../../contextProviders/Me';
+//import { MeContext } from '../../../contextProviders/Me';
 import * as mainStyles from '../../../styles';
 import Bar from '../../Segments/Bar';
 import Loading from '../../Segments/Loading';
@@ -12,30 +11,54 @@ import Table from '../../Segments/Table';
 import { ROLES } from '../../../constants';
 
 const useStyles = makeStyles(theme => ({
-    ...mainStyles,
-    cardSlim: {
-        width: '200px', 
-        height: '200px'
-    },
-    cardXL: {
-        width: '300px', 
-        height: '300px'
-    },
-    cardSlimImg: {
-        width: '100px', 
-        height: '100px'
-    },
-    cardXLImg: {
-        width: '200px', 
-        height: '200px'
-    }
+    ...mainStyles
 }));
+
+const EMPLOYEES = gql`
+    query employees {
+        employees {
+            id
+            name
+            surname
+            email
+            language
+            role
+            password
+        }
+    }
+`;
+
+const ADD_EMPLOYEE = gql`
+    mutation addEmployee($employee: EmployeeInput!) {
+        addEmployee(employee: $employee) {
+            id
+            name
+            surname
+            email
+            language
+            role
+            password
+        }
+    }
+`;
+
+/* const mockData = [
+    { name: 'Mehmet', surname: 'Baran', email: 'mehmet@gmail.com', language: 2, role: ROLES.MANAGER },
+    { name: 'Zerya Betül', surname: 'Baran', email: 'zerya@gmail.com', language: 1,  role: ROLES.SELLER },
+] */
 
 const Employees = () => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
-    const { me } = React.useContext(MeContext);
-    const loading = false;
+    // const { me } = React.useContext(MeContext);
+    const { loading, data } = useQuery(EMPLOYEES, {
+        fetchPolicy: "network-only"
+    });
+    const [ addEmployee, { loading: addEmployeeLoading, error: addEmployeeError }] = useMutation(ADD_EMPLOYEE, {
+        refetchQueries: [{query: EMPLOYEES}],
+        awaitRefetchQueries: true
+    });
+
     return(
         <div className={classes.containerBG}>
             {loading ? 
@@ -69,25 +92,30 @@ const Employees = () => {
                                     {
                                         title: translations.language,
                                         field: 'language',
-                                        lookup: { 1: 'Español', 2: 'English' },
+                                        lookup: { 'es': 'Español', 'en': 'English' },
                                     },
                                     {
-                                        title: "Rol",
+                                        title: translations.role,
                                         field: 'role',
                                         lookup: { 
-                                            [ROLES.MANAGER]: 'Manager', 
-                                            [ROLES.SELLER]: 'Vendedor', 
-                                            [ROLES.TECHNICIAN]: 'Técnico'
+                                            [ROLES.MANAGER]: translations.manager, 
+                                            [ROLES.SELLER]: translations.seller, 
+                                            [ROLES.TECHNICIAN]: translations.technician
                                         }
                                     },
+                                    { title: translations.password, field: 'password', editable: 'never', cellStyle: {maxWidth: '50px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'} }
                                 ]}
-                                data={[
-                                    { name: 'Mehmet', surname: 'Baran', email: 'mehmet@gmail.com', language: 2, role: ROLES.MANAGER },
-                                    { name: 'Zerya Betül', surname: 'Baran', email: 'zerya@gmail.com', language: 1,  role: ROLES.SELLER },
-                                ]} 
+                                data={data.employees} 
                                 editable={{
                                     onRowAdd: async(newData) => {
-                                        return;
+                                        if(newData.name && newData.surname && newData.email && newData.language && newData.role){
+                                            console.info('NEW DATA', newData);
+                                            await addEmployee({ variables: { employee:newData } });
+                                            return;
+                                        }
+                                        else{
+                                            alert('Empleado no creado. Es necesario cubrir todos los campos para poder crearlo.');
+                                        }
                                     },
                                     onRowUpdate: async(newData, oldData) => {
                                         return;
