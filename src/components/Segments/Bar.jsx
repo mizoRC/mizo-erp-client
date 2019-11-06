@@ -39,7 +39,7 @@ const useStyles = makeStyles(theme => ({
 
 const Bar = ({history, transparent}) => {
     const classes = useStyles();
-    const { me } = React.useContext(MeContext);
+    const { me, clearMe } = React.useContext(MeContext);
     const { translations } = React.useContext(TranslatorContext);
 	const [open, setOpen] = React.useState(false);
 	const anchorRef = React.useRef(null);
@@ -65,6 +65,7 @@ const Bar = ({history, transparent}) => {
 
     const logout = () => {
         sessionStorage.clear();
+        clearMe();
         history.replace('/login');
     };
 
