@@ -237,13 +237,13 @@ const Register = ({history, match}) => {
                                             >  
                                                 {data.me.registered ?
                                                         <div style={{textAlign: 'center'}}>
-                                                            <h2>Ya se ha registrado anteriormente de forma correcta.</h2>
+                                                            <h2>{translations.alreadyRegisteredCorrectly}</h2>
                                                         </div>
                                                     :
                                                         <>
                                                             <div style={{textAlign: 'center'}}>
-                                                                <h2>Bienvenido {data.me.name} {data.me.surname}</h2>
-                                                                <p>Por favor cambia la contraseña generada por defecto para poder acceder:</p>
+                                                                <h2>{translations.welcome} {data.me.name} {data.me.surname}</h2>
+                                                                <p>{translations.pleaseChangePasswordByDefault}</p>
                                                             </div>
                                                             <Grid container spacing={1}>
                                                                 <Grid item xs={12} sm={6} md={6}>
