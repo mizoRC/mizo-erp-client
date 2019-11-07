@@ -3,7 +3,6 @@ import { makeStyles } from '@material-ui/core';
 import { gql } from 'apollo-boost';
 import { useQuery, useMutation } from '@apollo/react-hooks';
 import { TranslatorContext } from '../../../contextProviders/Translator';
-//import { MeContext } from '../../../contextProviders/Me';
 import * as mainStyles from '../../../styles';
 import Bar from '../../Segments/Bar';
 import Loading from '../../Segments/Loading';
@@ -74,19 +73,18 @@ const UNSUBSCRIBE_EMPLOYEE = gql`
 const Employees = () => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
-    // const { me } = React.useContext(MeContext);
     const { loading, data } = useQuery(EMPLOYEES, {
         fetchPolicy: "network-only"
     });
-    const [ addEmployee, { loading: addEmployeeLoading, error: addEmployeeError }] = useMutation(ADD_EMPLOYEE, {
+    const [ addEmployee] = useMutation(ADD_EMPLOYEE, {
         refetchQueries: [{query: EMPLOYEES}],
         awaitRefetchQueries: true
     });
-    const [ updateEmployee, { loading: updateEmployeeLoading, error: updateEmployeeError }] = useMutation(UPDATE_EMPLOYEE, {
+    const [ updateEmployee] = useMutation(UPDATE_EMPLOYEE, {
         refetchQueries: [{query: EMPLOYEES}],
         awaitRefetchQueries: true
     });
-    const [ unsubscribeEmployee, { loading: unsubscribeEmployeeLoading, error: unsubscribeEmployeeError }] = useMutation(UNSUBSCRIBE_EMPLOYEE, {
+    const [ unsubscribeEmployee] = useMutation(UNSUBSCRIBE_EMPLOYEE, {
         refetchQueries: [{query: EMPLOYEES}],
         awaitRefetchQueries: true
     });

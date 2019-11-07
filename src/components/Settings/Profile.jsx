@@ -1,17 +1,17 @@
 import React from 'react';
 import { FormControl, InputLabel, Select, Grid, Button, Input, InputAdornment, FormHelperText, CircularProgress, IconButton, makeStyles } from '@material-ui/core';
-import { useApolloClient } from '@apollo/react-hooks';
+import { useApolloClient, useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import jwt_decode from 'jwt-decode';
 import { withRouter } from 'react-router-dom';
 import { execute } from '../../utils/graphql';
-import { TranslatorContext } from '../../contextProviders/Translator';
-import { MeContext } from '../../contextProviders/Me';
+import { TranslatorContext} from '../../contextProviders/Translator';
 import { languages } from '../../datasheets/languages';
 import { CustomCard, CustomCardHeader, CustomCardBody, CustomCardFooter } from '../../displayComponents/CustomCard';
 import { error } from '../../styles/colors';
 import * as mainStyles from '../../styles';
 import Bar from '../Segments/Bar';
+import Loading from '../Segments/Loading';
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles,
@@ -33,16 +33,39 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
+const ME = gql`
+    query me {
+        me {
+            id
+            name
+            surname
+            email
+            language
+            role
+            company {
+                id
+                name
+                country
+                address
+                phone
+                logo
+            }
+        }
+    }
+`;
+
 const Profile = ({history}) => {
     const classes = useStyles();
     const client = useApolloClient();
     const { translations, updateLanguage } = React.useContext(TranslatorContext);
-    const { me, refreshMe } = React.useContext(MeContext);
-    const [name, setName] = React.useState(me.name);
-    const [surname, setSurname] = React.useState(me.surname);
-    const [email, setEmail] = React.useState(me.email);
+    const { loading, data } = useQuery(ME, {
+        fetchPolicy: "network-only"
+    });
+    const [name, setName] = React.useState('');
+    const [surname, setSurname] = React.useState('');
+    const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
-    const [language, setLanguage] = React.useState(me.language);
+    const [language, setLanguage] = React.useState('');
     const [showPassword, setShowPassword] = React.useState(false);
     const [newPassword, setNewPassword] = React.useState('');
     const [showNewPassword, setShowNewPassword] = React.useState(false);
@@ -63,6 +86,15 @@ const Profile = ({history}) => {
     const [newPasswordsMatch, setNewPasswordsMatch] = React.useState(true);
     const [updating, setUpdating] = React.useState(false);
     const [incorrectPassword, setIncorrectPassword] = React.useState(false);
+
+    React.useEffect(() => {
+        if(data && data.me){
+            setName(data.me.name);
+            setSurname(data.me.surname);
+            setEmail(data.me.email);
+            setLanguage(data.me.language);
+        }
+    },[data]);
 
     const handleChangeName = event => {
         setName(event.target.value);
@@ -171,7 +203,6 @@ const Profile = ({history}) => {
                     setUpdating(false);
                     let decodedToken = jwt_decode(response.data.updateEmployeeMe.token);
                     updateLanguage(decodedToken.employee.language);
-                    refreshMe();
                     history.replace(`/dashboard/${decodedToken.employee.id}`);
                 }
                 else{
@@ -228,287 +259,299 @@ const Profile = ({history}) => {
 
     return(
         <div className={classes.containerBG}>
-            <div
-                style={{
-                    height: '100%',
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}
-            >
-                <Bar/>
-                <div
-                    style={{
-                        height: '100%',
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <CustomCard style={{maxWidth: "800px", maxHeight: '100%', marginTop: '35px', marginBottom: '35px'}}>
-                        <CustomCardHeader color="primary" textColor="white">
-                            <div
-                                style={{
-                                    textAlign: 'center',
-                                    fontSize: '30px'
-                                }}
-                            >
-                                {translations.profile}
-                            </div>
-                        </CustomCardHeader>
-                        <CustomCardBody
-                            style={{height: '100%', overflowY: 'auto'}}
-                        >
-                            <Grid container spacing={1}>
-                                <Grid item xs={12} sm={4} md={4}>
-                                    <FormControl fullWidth={true}>
-                                        <InputLabel htmlFor="input-name">
-                                            {translations.name}
-                                        </InputLabel>
-                                        <Input
-                                            id="input-name"
-                                            type={'text'}
-                                            value={name}
-                                            onChange={handleChangeName}
-                                            error={errorEmptyName}
-                                            fullWidth={true}
-                                            onKeyPress={handleEnterKey}
-                                        />
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={12} sm={4} md={4}>
-                                    <FormControl fullWidth={true}>
-                                        <InputLabel htmlFor="input-surname">
-                                            {translations.surname}
-                                        </InputLabel>
-                                        <Input
-                                            id="input-surname"
-                                            type={'text'}
-                                            value={surname}
-                                            onChange={handleChangeSurname}
-                                            error={errorEmptySurname}
-                                            fullWidth={true}
-                                            onKeyPress={handleEnterKey}
-                                        />
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={12} sm={4} md={4}>
-                                    <FormControl error={errorEmptyLanguage} fullWidth={true}>
-                                        <InputLabel htmlFor="language-select">
-                                            {translations.language}
-                                        </InputLabel>
-                                        <Select
-                                            native
-                                            value={language}
-                                            onChange={handleChangeLanguage}
-                                            inputProps={{
-                                                name: 'language',
-                                                id: 'language-select',
-                                            }}
-                                        >
-                                            <option value="" />
-                                            {languages.map(selectLanguage => (
-                                                <option 
-                                                    key={selectLanguage.code}
-                                                    value={selectLanguage.code}
-                                                >
-                                                    {selectLanguage.name}
-                                                </option>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-                                
-                                <Grid item xs={12} sm={6} md={6}>
-                                    <FormControl fullWidth={true} disabled>
-                                        <InputLabel htmlFor="input-email">
-                                            {translations.email}
-                                        </InputLabel>
-                                        <Input
-                                            id="input-email"
-                                            type={'text'}
-                                            value={email}
-                                            onChange={handleChangeEmail}
-                                            error={errorEmptyEmail || !validEmail}
-                                            fullWidth={true}
-                                            onKeyPress={handleEnterKey}
-                                        />
-                                        {!validEmail &&
-                                            <FormHelperText id="invalid-email-helper-text">{translations.invalidEmail}</FormHelperText>
-                                        }
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={6}>
-                                    <FormControl fullWidth={true}>
-                                        <InputLabel htmlFor="adornment-password">
-                                            {translations.currentPassword}
-                                        </InputLabel>
-                                        <Input
-                                            id="adornment-password"
-                                            type={showPassword ? 'text' : 'password'}
-                                            value={password}
-                                            onChange={handleChangePassword}
-                                            error={errorEmptyPassword || !validPassword}
-                                            onKeyPress={handleEnterKey}
-                                            endAdornment={
-                                                <InputAdornment position="end">
-                                                    <IconButton
-                                                        aria-label="toggle password visibility"
-                                                        onClick={handleClickShowPassword}
-                                                        onMouseDown={handleMouseDownPassword}
-                                                    >
-                                                        {showPassword ? 
-                                                                <i className="far fa-eye"></i>
-                                                            : 
-                                                                <i className="far fa-eye-slash"></i>
-                                                        }
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            }
-                                        />
-                                        {!validPassword &&
-                                            <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
-                                        }
-                                    </FormControl>
-                                </Grid>
-
-                                <Grid item xs={12} sm={6} md={6}>
-                                    <FormControl fullWidth={true}>
-                                        <InputLabel htmlFor="adornment-newpassword">
-                                            {translations.newPassword}
-                                        </InputLabel>
-                                        <Input
-                                            id="adornment-newpassword"
-                                            type={showNewPassword ? 'text' : 'password'}
-                                            value={newPassword}
-                                            onChange={handleChangeNewPassword}
-                                            error={errorEmptyNewPassword || !validNewPassword}
-                                            onKeyPress={handleEnterKey}
-                                            endAdornment={
-                                                <InputAdornment position="end">
-                                                    <IconButton
-                                                        aria-label="toggle password visibility"
-                                                        onClick={handleClickShowNewPassword}
-                                                        onMouseDown={handleMouseDownPassword}
-                                                    >
-                                                        {showNewPassword ? 
-                                                                <i className="far fa-eye"></i>
-                                                            : 
-                                                                <i className="far fa-eye-slash"></i>
-                                                        }
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            }
-                                        />
-                                        {!validNewPassword &&
-                                            <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
-                                        }
-                                    </FormControl>
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={6}>
-                                    <FormControl fullWidth={true}>
-                                        <InputLabel htmlFor="adornment-newpasswordrepeat">
-                                            {translations.newPasswordRepeated}
-                                        </InputLabel>
-                                        <Input
-                                            id="adornment-newpasswordrepeat"
-                                            type={showNewPasswordRepeated ? 'text' : 'password'}
-                                            value={newPasswordRepeated}
-                                            onChange={handleChangeNewPasswordRepeated}
-                                            error={errorEmptyNewPasswordRepeated || !validNewPasswordRepeated}
-                                            onKeyPress={handleEnterKey}
-                                            endAdornment={
-                                                <InputAdornment position="end">
-                                                    <IconButton
-                                                        aria-label="toggle password visibility"
-                                                        onClick={handleClickShowNewPasswordRepeated}
-                                                        onMouseDown={handleMouseDownPassword}
-                                                    >
-                                                        {showNewPasswordRepeated ? 
-                                                                <i className="far fa-eye"></i>
-                                                            : 
-                                                                <i className="far fa-eye-slash"></i>
-                                                        }
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            }
-                                        />
-                                        {!validNewPasswordRepeated &&
-                                            <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
-                                        }
-                                    </FormControl>
-                                </Grid>
-                            </Grid> 
-                        </CustomCardBody>
-                        <CustomCardFooter
+            {loading ? 
+                        <div
                             style={{
-                                height: '70px', 
                                 display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center'
+                                height: '100%',
+                                width: '100%'
                             }}
                         >
-                            {!newPasswordsMatch &&
-                                <div
-                                    style={{
-                                        marginBottom: '10px',
-                                        color: error
-                                    }}
-                                >
-                                    {translations.passwordsDontMatch}
-                                </div>
-                            }
-
-                            {updateFailed &&
-                                <div
-                                    style={{
-                                        marginBottom: '10px',
-                                        color: error
-                                    }}
-                                >
-                                    {translations.updateFailed}
-                                </div>
-                            }
-
-                            {incorrectPassword &&
-                                <div
-                                    style={{
-                                        marginBottom: '10px',
-                                        color: error
-                                    }}
-                                >
-                                    {translations.incorrectPassword}
-                                </div>
-                            }
-
-                            <Button 
-                                variant="contained" 
-                                color="primary"
-                                disabled={updating}
-                                onClick={update}
+                            <Loading />
+                        </div>
+                    :
+                        <div
+                            style={{
+                                height: '100%',
+                                width: '100%',
+                                display: 'flex',
+                                flexDirection: 'column'
+                            }}
+                        >
+                            <Bar/>
+                            <div
+                                style={{
+                                    height: '100%',
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
                             >
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection:' row',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}
-                                >
-                                    {translations.update}
-                                    {updating &&
-                                        <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
-                                            <CircularProgress size={20} color="secondary" />
+                                <CustomCard style={{maxWidth: "800px", maxHeight: '100%', marginTop: '35px', marginBottom: '35px'}}>
+                                    <CustomCardHeader color="primary" textColor="white">
+                                        <div
+                                            style={{
+                                                textAlign: 'center',
+                                                fontSize: '30px'
+                                            }}
+                                        >
+                                            {translations.profile}
                                         </div>
-                                    }
-                                </div>
-                            </Button>
-                        </CustomCardFooter>
-                    </CustomCard>
-                </div>
-            </div>
+                                    </CustomCardHeader>
+                                    <CustomCardBody
+                                        style={{height: '100%', overflowY: 'auto'}}
+                                    >
+                                        <Grid container spacing={1}>
+                                            <Grid item xs={12} sm={4} md={4}>
+                                                <FormControl fullWidth={true}>
+                                                    <InputLabel htmlFor="input-name">
+                                                        {translations.name}
+                                                    </InputLabel>
+                                                    <Input
+                                                        id="input-name"
+                                                        type={'text'}
+                                                        value={name}
+                                                        onChange={handleChangeName}
+                                                        error={errorEmptyName}
+                                                        fullWidth={true}
+                                                        onKeyPress={handleEnterKey}
+                                                    />
+                                                </FormControl>
+                                            </Grid>
+                                            <Grid item xs={12} sm={4} md={4}>
+                                                <FormControl fullWidth={true}>
+                                                    <InputLabel htmlFor="input-surname">
+                                                        {translations.surname}
+                                                    </InputLabel>
+                                                    <Input
+                                                        id="input-surname"
+                                                        type={'text'}
+                                                        value={surname}
+                                                        onChange={handleChangeSurname}
+                                                        error={errorEmptySurname}
+                                                        fullWidth={true}
+                                                        onKeyPress={handleEnterKey}
+                                                    />
+                                                </FormControl>
+                                            </Grid>
+                                            <Grid item xs={12} sm={4} md={4}>
+                                                <FormControl error={errorEmptyLanguage} fullWidth={true}>
+                                                    <InputLabel htmlFor="language-select">
+                                                        {translations.language}
+                                                    </InputLabel>
+                                                    <Select
+                                                        native
+                                                        value={language}
+                                                        onChange={handleChangeLanguage}
+                                                        inputProps={{
+                                                            name: 'language',
+                                                            id: 'language-select',
+                                                        }}
+                                                    >
+                                                        <option value="" />
+                                                        {languages.map(selectLanguage => (
+                                                            <option 
+                                                                key={selectLanguage.code}
+                                                                value={selectLanguage.code}
+                                                            >
+                                                                {selectLanguage.name}
+                                                            </option>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                            </Grid>
+                                            
+                                            <Grid item xs={12} sm={6} md={6}>
+                                                <FormControl fullWidth={true} disabled>
+                                                    <InputLabel htmlFor="input-email">
+                                                        {translations.email}
+                                                    </InputLabel>
+                                                    <Input
+                                                        id="input-email"
+                                                        type={'text'}
+                                                        value={email}
+                                                        onChange={handleChangeEmail}
+                                                        error={errorEmptyEmail || !validEmail}
+                                                        fullWidth={true}
+                                                        onKeyPress={handleEnterKey}
+                                                    />
+                                                    {!validEmail &&
+                                                        <FormHelperText id="invalid-email-helper-text">{translations.invalidEmail}</FormHelperText>
+                                                    }
+                                                </FormControl>
+                                            </Grid>
+                                            <Grid item xs={12} sm={6} md={6}>
+                                                <FormControl fullWidth={true}>
+                                                    <InputLabel htmlFor="adornment-password">
+                                                        {translations.currentPassword}
+                                                    </InputLabel>
+                                                    <Input
+                                                        id="adornment-password"
+                                                        type={showPassword ? 'text' : 'password'}
+                                                        value={password}
+                                                        onChange={handleChangePassword}
+                                                        error={errorEmptyPassword || !validPassword}
+                                                        onKeyPress={handleEnterKey}
+                                                        endAdornment={
+                                                            <InputAdornment position="end">
+                                                                <IconButton
+                                                                    aria-label="toggle password visibility"
+                                                                    onClick={handleClickShowPassword}
+                                                                    onMouseDown={handleMouseDownPassword}
+                                                                >
+                                                                    {showPassword ? 
+                                                                            <i className="far fa-eye"></i>
+                                                                        : 
+                                                                            <i className="far fa-eye-slash"></i>
+                                                                    }
+                                                                </IconButton>
+                                                            </InputAdornment>
+                                                        }
+                                                    />
+                                                    {!validPassword &&
+                                                        <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
+                                                    }
+                                                </FormControl>
+                                            </Grid>
+
+                                            <Grid item xs={12} sm={6} md={6}>
+                                                <FormControl fullWidth={true}>
+                                                    <InputLabel htmlFor="adornment-newpassword">
+                                                        {translations.newPassword}
+                                                    </InputLabel>
+                                                    <Input
+                                                        id="adornment-newpassword"
+                                                        type={showNewPassword ? 'text' : 'password'}
+                                                        value={newPassword}
+                                                        onChange={handleChangeNewPassword}
+                                                        error={errorEmptyNewPassword || !validNewPassword}
+                                                        onKeyPress={handleEnterKey}
+                                                        endAdornment={
+                                                            <InputAdornment position="end">
+                                                                <IconButton
+                                                                    aria-label="toggle password visibility"
+                                                                    onClick={handleClickShowNewPassword}
+                                                                    onMouseDown={handleMouseDownPassword}
+                                                                >
+                                                                    {showNewPassword ? 
+                                                                            <i className="far fa-eye"></i>
+                                                                        : 
+                                                                            <i className="far fa-eye-slash"></i>
+                                                                    }
+                                                                </IconButton>
+                                                            </InputAdornment>
+                                                        }
+                                                    />
+                                                    {!validNewPassword &&
+                                                        <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
+                                                    }
+                                                </FormControl>
+                                            </Grid>
+                                            <Grid item xs={12} sm={6} md={6}>
+                                                <FormControl fullWidth={true}>
+                                                    <InputLabel htmlFor="adornment-newpasswordrepeat">
+                                                        {translations.newPasswordRepeated}
+                                                    </InputLabel>
+                                                    <Input
+                                                        id="adornment-newpasswordrepeat"
+                                                        type={showNewPasswordRepeated ? 'text' : 'password'}
+                                                        value={newPasswordRepeated}
+                                                        onChange={handleChangeNewPasswordRepeated}
+                                                        error={errorEmptyNewPasswordRepeated || !validNewPasswordRepeated}
+                                                        onKeyPress={handleEnterKey}
+                                                        endAdornment={
+                                                            <InputAdornment position="end">
+                                                                <IconButton
+                                                                    aria-label="toggle password visibility"
+                                                                    onClick={handleClickShowNewPasswordRepeated}
+                                                                    onMouseDown={handleMouseDownPassword}
+                                                                >
+                                                                    {showNewPasswordRepeated ? 
+                                                                            <i className="far fa-eye"></i>
+                                                                        : 
+                                                                            <i className="far fa-eye-slash"></i>
+                                                                    }
+                                                                </IconButton>
+                                                            </InputAdornment>
+                                                        }
+                                                    />
+                                                    {!validNewPasswordRepeated &&
+                                                        <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
+                                                    }
+                                                </FormControl>
+                                            </Grid>
+                                        </Grid> 
+                                    </CustomCardBody>
+                                    <CustomCardFooter
+                                        style={{
+                                            height: '70px', 
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        {!newPasswordsMatch &&
+                                            <div
+                                                style={{
+                                                    marginBottom: '10px',
+                                                    color: error
+                                                }}
+                                            >
+                                                {translations.passwordsDontMatch}
+                                            </div>
+                                        }
+
+                                        {updateFailed &&
+                                            <div
+                                                style={{
+                                                    marginBottom: '10px',
+                                                    color: error
+                                                }}
+                                            >
+                                                {translations.updateFailed}
+                                            </div>
+                                        }
+
+                                        {incorrectPassword &&
+                                            <div
+                                                style={{
+                                                    marginBottom: '10px',
+                                                    color: error
+                                                }}
+                                            >
+                                                {translations.incorrectPassword}
+                                            </div>
+                                        }
+
+                                        <Button 
+                                            variant="contained" 
+                                            color="primary"
+                                            disabled={updating}
+                                            onClick={update}
+                                        >
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    flexDirection:' row',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}
+                                            >
+                                                {translations.update}
+                                                {updating &&
+                                                    <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
+                                                        <CircularProgress size={20} color="secondary" />
+                                                    </div>
+                                                }
+                                            </div>
+                                        </Button>
+                                    </CustomCardFooter>
+                                </CustomCard>
+                            </div>
+                        </div>
+            }
         </div>
     )
 };

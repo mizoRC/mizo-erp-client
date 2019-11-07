@@ -1,6 +1,7 @@
 import React from "react";
 import { Switch, Route, withRouter, Redirect } from "react-router-dom";
 import Login from '../components/Login/Login';
+import SignUp from '../components/Login/SignUp';
 import Register from '../components/Login/Register';
 import Dashboard from '../components/Dashboard';
 import Profile from '../components/Settings/Profile';
@@ -20,7 +21,8 @@ const AppRouter = () => {
 	return (
 		<Switch>
             <Route exact path="/" component={Login} />
-            <Route exact path="/signup" component={Register} />
+            <Route exact path="/signup" component={SignUp} />
+            <Route exact path="/register/:token" component={Register} />
             <Route exact path="/dashboard/:userID" component={Dashboard} />
             <Route exact path="/profile/:userID" component={Profile} />
             <Route exact path="/company/:companyID" component={Company} />

@@ -5,7 +5,6 @@ import { onError } from 'apollo-link-error';
 import { BrowserRouter } from "react-router-dom";
 import { createBrowserHistory } from "history";
 import Translator from './contextProviders/Translator';
-import Me from './contextProviders/Me';
 import ThemeContainer from './containers/ThemeContainer';
 import { ToastContainer, toast } from 'react-toastify';
 import AppRouter from "./containers/AppRouter";
@@ -47,7 +46,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, response, f
 	console.error(graphQLErrors);
 	console.error(networkError);
 
-    if(graphQLErrors[0].code === 401){
+    if(!!graphQLErrors && !!graphQLErrors[0] && !graphQLErrors[0].code && graphQLErrors[0].code === 401){
         console.info('SESSION EXPIRED');
         const message = printSessionExpiredError();
         if (!toast.isActive(toastId)) {
@@ -75,12 +74,10 @@ function App() {
 		<ApolloProvider client={client}>
             <ThemeContainer>
                 <Translator>
-                    <Me>
-                        <ToastContainer/>
-                        <BrowserRouter>
-                            <AppRouter />
-                        </BrowserRouter>
-                    </Me>
+                    <ToastContainer/>
+                    <BrowserRouter>
+                        <AppRouter />
+                    </BrowserRouter>
                 </Translator>
             </ThemeContainer>
 		</ApolloProvider>

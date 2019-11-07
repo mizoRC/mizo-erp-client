@@ -47,9 +47,10 @@ const Translator = ({children}) => {
     };
 
     const updateLanguage = (newLanguage) => {
-        if(newLanguage !== language){
+        const sessionStorageLanguage = sessionStorage.getItem('language')
+        if(newLanguage !== sessionStorageLanguage){
             setLanguage(newLanguage);
-            sessionStorage.setItem('language', language);
+            sessionStorage.setItem('language', newLanguage);
         }
     }
 
