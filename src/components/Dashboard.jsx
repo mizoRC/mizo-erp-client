@@ -92,20 +92,20 @@ const GridCard = ({title, img, action}) => {
 const Dashboard = ({history}) => {
     const classes = useStyles();
     const { translations, updateLanguage } = React.useContext(TranslatorContext);
-    const { loading, data } = useQuery(ME);
-    /* const { loading, data } = useQuery(ME, {
+    // const { loading, data } = useQuery(ME);
+    const { loading, data } = useQuery(ME, {
         fetchPolicy: "network-only"
-    }); */
+    });
 
     const goToModule = route => {
         history.push(route);
     }
 
     React.useEffect(() => {
-        if(!!data && data.me){
+        if(!!data && !!data.me){
             updateLanguage(data.me.language);
         }
-    }, [data]);
+    },[data])
 
 	return (
         <div className={classes.containerBG}>

@@ -40,11 +40,17 @@ const useStyles = makeStyles(theme => ({
 const Bar = ({history, transparent}) => {
     const token = sessionStorage.getItem("token");
     const decodedToken = jwt_decode(token);
-    const me = decodedToken.employee;
+    const [me, setMe] = React.useState(decodedToken.employee);
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
 	const [open, setOpen] = React.useState(false);
 	const anchorRef = React.useRef(null);
+
+    React.useEffect(() => {
+        const token = sessionStorage.getItem("token");
+        const decodedToken = jwt_decode(token);
+        setMe(decodedToken.employee)
+    },[])
 
 	const handleToggle = () => {
 		setOpen(prevOpen => !prevOpen);

@@ -1,16 +1,14 @@
 import React from 'react';
 import { Paper, FormControl, InputLabel, Select, Grid, Button, Input, InputAdornment, FormHelperText, CircularProgress, IconButton, makeStyles } from '@material-ui/core';
-import { useApolloClient } from '@apollo/react-hooks';
+import { useQuery, useApolloClient } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import jwt_decode from 'jwt-decode';
 import { withRouter } from 'react-router-dom';
 import { execute } from '../../utils/graphql';
 import { TranslatorContext } from '../../contextProviders/Translator';
-import useDisplayBreakpoints from '../../contextProviders/useDisplayBreakpoints';
-import { mainCountries, countries } from '../../datasheets/countries';
-import { languages } from '../../datasheets/languages';
 import { CustomCard, CustomCardHeader, CustomCardBody, CustomCardFooter } from '../../displayComponents/CustomCard';
-import { primary, tertiary, error } from '../../styles/colors';
+import Loading from '../Segments/Loading';
+import { primary, error } from '../../styles/colors';
 import * as mainStyles from '../../styles';
 import bgImage from '../../assets/fondo.png';
 import logoComplete from '../../assets/logo_complete_white.svg';
@@ -48,9 +46,26 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const Register = ({history}) => {
+const ME = gql`
+    query me {
+        me {
+            id
+            name
+            surname
+            email
+            language
+            role
+            registered
+        }
+    }
+`;
+
+const Register = ({history, match}) => {
+    const existToken = sessionStorage.getItem('token');
+    if(!existToken) sessionStorage.setItem('token', match.params.token);
     const classes = useStyles();
     const client = useApolloClient();
+    const { loading, data } = useQuery(ME);
     const { translations } = React.useContext(TranslatorContext);
     const [password, setPassword] = React.useState('');
     const [passwordRepeated, setPasswordRepeated] = React.useState('');
@@ -59,8 +74,8 @@ const Register = ({history}) => {
     const [errorEmptyPasswordRepeated, setErrorEmptyPasswordRepeated] = React.useState(false);
     const [validPassword, setValidPassword] = React.useState(true);
     const [validPasswordRepeated, setValidPasswordRepeated] = React.useState(true);
-    const [showPassword, setShowPassword] = React.useState(true);
-    const [showPasswordRepeated, setShowPasswordRepeated] = React.useState(true);
+    const [showPassword, setShowPassword] = React.useState(false);
+    const [showPasswordRepeated, setShowPasswordRepeated] = React.useState(false);
     const [passwordsMatch, setPasswordsMatch] = React.useState(true);
     const [registering, setRegistering] = React.useState(false);
 
@@ -100,42 +115,32 @@ const Register = ({history}) => {
     const register = async() => {
         const hasErrors = checkErrors();
 
-        /* if(!hasErrors){
+        if(!hasErrors){
             try {
                 setRegistering(true);
                 const mutation = gql`
-                    mutation register(
-                        $registerInfo: RegisterInfo!
+                    mutation registerEmployee(
+                        $newPassword: String!
                     ) {
-                        register(
-                            registerInfo:$registerInfo
+                        registerEmployee(
+                            newPassword:$newPassword
                         ) {
                             token
                         }
                     }
                 `;
                 let variables = {
-                    registerInfo: {
-                        name: name,
-                        surname: surname,
-                        email: email,
-                        password: password,
-                        language: language,
-                        companyName: companyName,
-                        phone: phone,
-                        country: country,
-                        address: address
-                    }
+                    newPassword:password
                 };
 
                 const response = await execute(client, "mutation", mutation, variables);
 
-                if(!!response && !!response.data && !!response.data.register && !!response.data.register.token){
-                    const token = response.data.register.token;
+                if(!!response && !!response.data && !!response.data.registerEmployee && !!response.data.registerEmployee.token){
+                    const token = response.data.registerEmployee.token;
+                    sessionStorage.removeItem('token');
                     sessionStorage.setItem("token", token);
-                    setErrorAlreadyRegisteredEmail(false);
                     setRegistering(false);
-                    let decodedToken = jwt_decode(response.data.register.token);
+                    let decodedToken = jwt_decode(token);
                     history.replace(`/dashboard/${decodedToken.employee.id}`);
                 }
                 else{
@@ -144,15 +149,9 @@ const Register = ({history}) => {
                 }
             } catch (error) {
                 setRegistering(false);
-                if(error.includes("Email already registered")){
-                    setErrorAlreadyRegisteredEmail(true);
-                }
-                else{
-                    setRegisterFailed(true);
-                }
+                setRegisterFailed(true);
             }
-            
-        } */
+        }
     }
 
     const checkErrors = () => {
@@ -175,184 +174,212 @@ const Register = ({history}) => {
     };
 
     return(
-        <Paper className={classes.mainPaperContainer} square={true}>
-            <div
-                style={{
-                    height: '100%',
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}
-            >
-                <div
-                    style={{
-                        height: '100px',
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <img alt="mizo-erp-logo-complete" src={logoComplete} style={{maxWidth: '200px'}} />
-                </div>
-
-                <div
-                    style={{
-                        height: 'calc(100% - 100px)',
-                        width: '100%',
-                        display: 'flex'
-                    }}
-                >
-                    <div className={classes.centered}>
-                        <div 
+        <>
+            {loading ?
+                    <div
+                        style={{
+                            display: 'flex',
+                            height: '100%',
+                            width: '100%'
+                        }}
+                    >
+                        <Loading />
+                    </div>
+                :
+                    <Paper className={classes.mainPaperContainer} square={true}>
+                        <div
                             style={{
-                                height: 'calc(100% - 100px)',
-                                padding: '10px'
+                                height: '100%',
+                                width: '100%',
+                                display: 'flex',
+                                flexDirection: 'column'
                             }}
                         >
-                            <CustomCard style={{maxWidth: "800px", maxHeight: '100%', marginTop: '35px', marginBottom: '35px'}}>
-                                <CustomCardHeader color="primary" textColor="white">
-                                    <div
+                            <div
+                                style={{
+                                    height: '100px',
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <img alt="mizo-erp-logo-complete" src={logoComplete} style={{maxWidth: '200px'}} />
+                            </div>
+
+                            <div
+                                style={{
+                                    height: 'calc(100% - 100px)',
+                                    width: '100%',
+                                    display: 'flex'
+                                }}
+                            >
+                                <div className={classes.centered}>
+                                    <div 
                                         style={{
-                                            textAlign: 'center',
-                                            fontSize: '30px'
+                                            height: 'calc(100% - 100px)',
+                                            padding: '10px'
                                         }}
                                     >
-                                        {translations.signUp}
-                                    </div>
-                                </CustomCardHeader>
-                                <CustomCardBody
-                                    style={{height: '100%', overflowY: 'auto'}}
-                                >
-                                    <Grid container spacing={1}>
-                                        <Grid item xs={12} sm={6} md={6}>
-                                            <FormControl fullWidth={true}>
-                                                <InputLabel htmlFor="adornment-newpassword">
-                                                    {translations.newPassword}
-                                                </InputLabel>
-                                                <Input
-                                                    id="adornment-newpassword"
-                                                    type={showPassword ? 'text' : 'password'}
-                                                    value={password}
-                                                    onChange={handleChangePassword}
-                                                    error={errorEmptyPassword || !validPassword}
-                                                    onKeyPress={handleEnterKey}
-                                                    endAdornment={
-                                                        <InputAdornment position="end">
-                                                            <IconButton
-                                                                aria-label="toggle password visibility"
-                                                                onClick={handleClickShowPassword}
-                                                                onMouseDown={handleMouseDownPassword}
-                                                            >
-                                                                {showPassword ? 
-                                                                        <i className="far fa-eye"></i>
-                                                                    : 
-                                                                        <i className="far fa-eye-slash"></i>
-                                                                }
-                                                            </IconButton>
-                                                        </InputAdornment>
-                                                    }
-                                                />
-                                                {!validPassword &&
-                                                    <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
-                                                }
-                                            </FormControl>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={6}>
-                                            <FormControl fullWidth={true}>
-                                                <InputLabel htmlFor="adornment-newpasswordrepeat">
-                                                    {translations.newPasswordRepeated}
-                                                </InputLabel>
-                                                <Input
-                                                    id="adornment-newpasswordrepeat"
-                                                    type={showPasswordRepeated ? 'text' : 'password'}
-                                                    value={passwordRepeated}
-                                                    onChange={handleChangePasswordRepeated}
-                                                    error={errorEmptyPasswordRepeated || !validPasswordRepeated}
-                                                    onKeyPress={handleEnterKey}
-                                                    endAdornment={
-                                                        <InputAdornment position="end">
-                                                            <IconButton
-                                                                aria-label="toggle password visibility"
-                                                                onClick={handleClickShowPasswordRepeated}
-                                                                onMouseDown={handleMouseDownPassword}
-                                                            >
-                                                                {showPasswordRepeated ? 
-                                                                        <i className="far fa-eye"></i>
-                                                                    : 
-                                                                        <i className="far fa-eye-slash"></i>
-                                                                }
-                                                            </IconButton>
-                                                        </InputAdornment>
-                                                    }
-                                                />
-                                                {!validPasswordRepeated &&
-                                                    <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
-                                                }
-                                            </FormControl>
-                                        </Grid>
-                                    </Grid> 
-                                </CustomCardBody>
-                                <CustomCardFooter
-                                    style={{
-                                        height: '70px', 
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}
-                                >
-                                    {!passwordsMatch &&
-                                        <div
-                                            style={{
-                                                marginBottom: '10px',
-                                                color: error
-                                            }}
-                                        >
-                                            {translations.passwordsDontMatch}
-                                        </div>
-                                    }
-
-                                    {registerFailed &&
-                                        <div
-                                            style={{
-                                                marginBottom: '10px',
-                                                color: error
-                                            }}
-                                        >
-                                            {translations.signUpFailed}
-                                        </div>
-                                    }
-
-                                    <Button 
-                                        variant="contained" 
-                                        color="primary"
-                                        onClick={register}
-                                        disabled={registering}
-                                    >
-                                        <div
-                                            style={{
-                                                display: 'flex',
-                                                flexDirection:' row',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}
-                                        >
-                                            {translations.startNow}
-                                            {registering &&
-                                                <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
-                                                    <CircularProgress size={20} color="secondary" />
+                                        <CustomCard style={{maxWidth: "800px", maxHeight: '100%', marginTop: '35px', marginBottom: '35px'}}>
+                                            <CustomCardHeader color="primary" textColor="white">
+                                                <div
+                                                    style={{
+                                                        textAlign: 'center',
+                                                        fontSize: '30px'
+                                                    }}
+                                                >
+                                                    {translations.signUp}
                                                 </div>
-                                            }
-                                        </div>
-                                    </Button>
-                                </CustomCardFooter>
-                            </CustomCard>
+                                            </CustomCardHeader>
+                                            <CustomCardBody
+                                                style={{height: '100%', overflowY: 'auto'}}
+                                            >  
+                                                {data.me.registered ?
+                                                        <div style={{textAlign: 'center'}}>
+                                                            <h2>Ya se ha registrado anteriormente de forma correcta.</h2>
+                                                        </div>
+                                                    :
+                                                        <>
+                                                            <div style={{textAlign: 'center'}}>
+                                                                <h2>Bienvenido {data.me.name} {data.me.surname} ({data.me.registered ? 'SI' : 'NO'})</h2>
+                                                                <p>Por favor cambia la contraseña generada por defecto para poder acceder:</p>
+                                                            </div>
+                                                            <Grid container spacing={1}>
+                                                                <Grid item xs={12} sm={6} md={6}>
+                                                                    <FormControl fullWidth={true}>
+                                                                        <InputLabel htmlFor="adornment-newpassword">
+                                                                            {translations.newPassword}
+                                                                        </InputLabel>
+                                                                        <Input
+                                                                            id="adornment-newpassword"
+                                                                            type={showPassword ? 'text' : 'password'}
+                                                                            value={password}
+                                                                            onChange={handleChangePassword}
+                                                                            error={errorEmptyPassword || !validPassword}
+                                                                            onKeyPress={handleEnterKey}
+                                                                            endAdornment={
+                                                                                <InputAdornment position="end">
+                                                                                    <IconButton
+                                                                                        aria-label="toggle password visibility"
+                                                                                        onClick={handleClickShowPassword}
+                                                                                        onMouseDown={handleMouseDownPassword}
+                                                                                    >
+                                                                                        {showPassword ? 
+                                                                                                <i className="far fa-eye"></i>
+                                                                                            : 
+                                                                                                <i className="far fa-eye-slash"></i>
+                                                                                        }
+                                                                                    </IconButton>
+                                                                                </InputAdornment>
+                                                                            }
+                                                                        />
+                                                                        {!validPassword &&
+                                                                            <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
+                                                                        }
+                                                                    </FormControl>
+                                                                </Grid>
+                                                                <Grid item xs={12} sm={6} md={6}>
+                                                                    <FormControl fullWidth={true}>
+                                                                        <InputLabel htmlFor="adornment-newpasswordrepeat">
+                                                                            {translations.newPasswordRepeated}
+                                                                        </InputLabel>
+                                                                        <Input
+                                                                            id="adornment-newpasswordrepeat"
+                                                                            type={showPasswordRepeated ? 'text' : 'password'}
+                                                                            value={passwordRepeated}
+                                                                            onChange={handleChangePasswordRepeated}
+                                                                            error={errorEmptyPasswordRepeated || !validPasswordRepeated}
+                                                                            onKeyPress={handleEnterKey}
+                                                                            endAdornment={
+                                                                                <InputAdornment position="end">
+                                                                                    <IconButton
+                                                                                        aria-label="toggle password visibility"
+                                                                                        onClick={handleClickShowPasswordRepeated}
+                                                                                        onMouseDown={handleMouseDownPassword}
+                                                                                    >
+                                                                                        {showPasswordRepeated ? 
+                                                                                                <i className="far fa-eye"></i>
+                                                                                            : 
+                                                                                                <i className="far fa-eye-slash"></i>
+                                                                                        }
+                                                                                    </IconButton>
+                                                                                </InputAdornment>
+                                                                            }
+                                                                        />
+                                                                        {!validPasswordRepeated &&
+                                                                            <FormHelperText id="invalid-email-helper-text">{translations.passwordMinLength}</FormHelperText>
+                                                                        }
+                                                                    </FormControl>
+                                                                </Grid>
+                                                            </Grid> 
+                                                        </>
+                                                }
+                                            </CustomCardBody>
+                                            <CustomCardFooter
+                                                style={{
+                                                    height: '70px', 
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}
+                                            >
+                                                {!passwordsMatch &&
+                                                    <div
+                                                        style={{
+                                                            marginBottom: '10px',
+                                                            color: error
+                                                        }}
+                                                    >
+                                                        {translations.passwordsDontMatch}
+                                                    </div>
+                                                }
+
+                                                {registerFailed &&
+                                                    <div
+                                                        style={{
+                                                            marginBottom: '10px',
+                                                            color: error
+                                                        }}
+                                                    >
+                                                        {translations.signUpFailed}
+                                                    </div>
+                                                }
+
+                                                {!data.me.registered &&
+                                                    <Button 
+                                                        variant="contained" 
+                                                        color="primary"
+                                                        onClick={register}
+                                                        disabled={registering}
+                                                    >
+                                                        <div
+                                                            style={{
+                                                                display: 'flex',
+                                                                flexDirection:' row',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center'
+                                                            }}
+                                                        >
+                                                            {translations.startNow}
+                                                            {registering &&
+                                                                <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
+                                                                    <CircularProgress size={20} color="secondary" />
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </Button>
+                                                }
+                                            </CustomCardFooter>
+                                        </CustomCard>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </Paper>
+                    </Paper>
+            }
+        </>
     )
 };
 

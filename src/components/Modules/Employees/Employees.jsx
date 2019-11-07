@@ -76,15 +76,15 @@ const Employees = () => {
     const { loading, data } = useQuery(EMPLOYEES, {
         fetchPolicy: "network-only"
     });
-    const [ addEmployee, { loading: addEmployeeLoading, error: addEmployeeError }] = useMutation(ADD_EMPLOYEE, {
+    const [ addEmployee] = useMutation(ADD_EMPLOYEE, {
         refetchQueries: [{query: EMPLOYEES}],
         awaitRefetchQueries: true
     });
-    const [ updateEmployee, { loading: updateEmployeeLoading, error: updateEmployeeError }] = useMutation(UPDATE_EMPLOYEE, {
+    const [ updateEmployee] = useMutation(UPDATE_EMPLOYEE, {
         refetchQueries: [{query: EMPLOYEES}],
         awaitRefetchQueries: true
     });
-    const [ unsubscribeEmployee, { loading: unsubscribeEmployeeLoading, error: unsubscribeEmployeeError }] = useMutation(UNSUBSCRIBE_EMPLOYEE, {
+    const [ unsubscribeEmployee] = useMutation(UNSUBSCRIBE_EMPLOYEE, {
         refetchQueries: [{query: EMPLOYEES}],
         awaitRefetchQueries: true
     });
