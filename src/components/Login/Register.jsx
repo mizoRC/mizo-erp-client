@@ -242,7 +242,7 @@ const Register = ({history, match}) => {
                                                     :
                                                         <>
                                                             <div style={{textAlign: 'center'}}>
-                                                                <h2>Bienvenido {data.me.name} {data.me.surname} ({data.me.registered ? 'SI' : 'NO'})</h2>
+                                                                <h2>Bienvenido {data.me.name} {data.me.surname}</h2>
                                                                 <p>Por favor cambia la contraseña generada por defecto para poder acceder:</p>
                                                             </div>
                                                             <Grid container spacing={1}>
