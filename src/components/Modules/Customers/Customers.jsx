@@ -7,7 +7,6 @@ import * as mainStyles from '../../../styles';
 import Bar from '../../Segments/Bar';
 import Loading from '../../Segments/Loading';
 import Table from '../../Segments/Table';
-import { ROLES } from '../../../constants';
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles
