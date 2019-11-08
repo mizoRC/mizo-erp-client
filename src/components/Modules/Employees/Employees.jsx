@@ -143,7 +143,7 @@ const Employees = () => {
                                             return;
                                         }
                                         else{
-                                            alert('Empleado no creado. Es necesario cubrir todos los campos para poder crearlo.');
+                                            alert(translations.employeeNotCreatedNecessaryCoverAllFields);
                                         }
                                     },
                                     onRowUpdate: async(newData, oldData) => {
@@ -153,7 +153,7 @@ const Employees = () => {
                                             return;
                                         }
                                         else{
-                                            alert('Empleado no creado. Es necesario cubrir todos los campos para poder crearlo.');
+                                            alert(translations.employeeNotCreatedNecessaryCoverAllFields);
                                         }
                                     },
                                     onRowDelete: async(oldData) => {
