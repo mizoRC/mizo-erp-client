@@ -1,12 +1,14 @@
 import React from 'react';
-import { makeStyles, Paper, Grid } from '@material-ui/core';
+import { makeStyles, Grid } from '@material-ui/core';
 import { gql } from 'apollo-boost';
 import { useQuery, useMutation } from '@apollo/react-hooks';
 import { TranslatorContext } from '../../../contextProviders/Translator';
 import * as mainStyles from '../../../styles';
 import Bar from '../../Segments/Bar';
 import Loading from '../../Segments/Loading';
+import ActionsBar from './ActionsBar';
 import ProductCard from './ProductCard';
+import AddProductModal from './AddProductModal';
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles
@@ -24,8 +26,6 @@ const PRODUCTS = gql`
             category{
                 id
                 name
-                translationTag
-                companyId
             }
         }
     }
@@ -58,28 +58,53 @@ const UNSUBSCRIBE_PRODUCT = gql`
     }
 `;
 
+const CATEGORIES = gql`
+    query categories {
+        categories{
+            id
+            name
+        }
+    }
+`;
+
 const Products = () => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
+    const [open, setOpen] = React.useState(false);
     const { loading, data } = useQuery(PRODUCTS, {
         fetchPolicy: "network-only"
     });
-    const [ addProduct] = useMutation(ADD_PRODUCT, {
+    const [ addProduct ] = useMutation(ADD_PRODUCT, {
         refetchQueries: [{query: PRODUCTS}],
         awaitRefetchQueries: true
     });
-    const [ updateProduct] = useMutation(UPDATE_PRODUCT, {
+    const [ updateProduct ] = useMutation(UPDATE_PRODUCT, {
         refetchQueries: [{query: PRODUCTS}],
         awaitRefetchQueries: true
     });
-    const [ unsubscribeProduct] = useMutation(UNSUBSCRIBE_PRODUCT, {
+    const [ unsubscribeProduct ] = useMutation(UNSUBSCRIBE_PRODUCT, {
         refetchQueries: [{query: PRODUCTS}],
         awaitRefetchQueries: true
     });
+    const { loading: loadingCategories, data: dataCategories } = useQuery(CATEGORIES, {
+        fetchPolicy: "network-only"
+    });
+
+    const handleOpen = product => {
+        setOpen(true);
+    }
+
+    const handleClose = () => {
+        setOpen(false);
+    }
+
+    const handleSave = () => {
+        setOpen(false);
+    }
 
     return(
         <div className={classes.containerBG}>
-            {loading ? 
+            {(loading || loadingCategories) ? 
                     <div
                         style={{
                             display: 'flex',
@@ -107,36 +132,42 @@ const Products = () => {
                                     flexDirection: 'column'
                                 }}
                             >
-                                <Paper
-                                    style={{
-                                        height: '150px',
-                                        width: '100%',
-                                        display: 'flex'
-                                    }}
-                                >
-                                    Header
-                                </Paper>
+                                <ActionsBar height={100} add={handleOpen} categories={dataCategories.categories}/>
 
                                 <div
                                     style={{
-                                        height: 'calc(100% - 180px)',
-                                        width: '100%',
+                                        height: 'calc(100% - 150px)',
+                                        width: 'calc(100% - 20px)',
                                         display: 'flex',
-                                        marginTop: '30px'
+                                        marginTop: '30px',
+                                        padding: '10px',
+                                        backgroundColor: 'rgba(255,255,255,0.2)',
+                                        borderRadius: '6px'
                                     }}
                                 >
-                                    <Grid container className={classes.root} spacing={1}>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <ProductCard />
-                                        </Grid>
+                                    <Grid container spacing={1} style={{overflowY: 'auto'}}>
+                                        {[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30].map(item => (
+                                            <Grid item xs={12} sm={6} md={3}>
+                                                <ProductCard action={handleOpen}/>
+                                            </Grid>
+                                        ))}
 
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <ProductCard />
-                                        </Grid>
+                                        {data.products.map(product => (
+                                            <Grid item xs={12} sm={6} md={3}>
+                                                <ProductCard product={product} action={handleOpen}/>
+                                            </Grid>
+                                        ))}
                                     </Grid>
                                 </div>
                             </div>
                         </div>
+                        <AddProductModal 
+                            open={open} 
+                            handleClose={handleClose} 
+                            handleSave={handleSave}
+                            product={{}}
+                            categories={dataCategories.categories}
+                        />
                     </>
             }
         </div>
