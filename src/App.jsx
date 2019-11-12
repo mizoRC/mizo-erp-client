@@ -46,7 +46,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, response, f
 	console.error(graphQLErrors);
 	console.error(networkError);
 
-    if(!!graphQLErrors && !!graphQLErrors[0] && !graphQLErrors[0].code && graphQLErrors[0].code === 401){
+    if(!!graphQLErrors && !!graphQLErrors[0] && ((!graphQLErrors[0].code && graphQLErrors[0].code === 401) || (!!graphQLErrors[0].message && !!graphQLErrors[0].message.includes("Invalid token")))){
         console.info('SESSION EXPIRED');
         const message = printSessionExpiredError();
         if (!toast.isActive(toastId)) {
