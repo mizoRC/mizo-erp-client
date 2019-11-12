@@ -1,11 +1,16 @@
 import React from 'react';
 import { Paper, Grid, Typography, TextField, MenuItem, Button, Fab, Tooltip } from '@material-ui/core';
 import { TranslatorContext } from '../../../contextProviders/Translator';
+const defaultLimit = 16;
+const initialOffset = 0;
+let filtersTimeout;
 
-const ActionsBar = ({height, add, addCategory, categories}) => {
+const ActionsBar = ({height, add, addCategory, categories, handleChangeFilters: handleChangeFiltersParent, loading}) => {
     const { translations } = React.useContext(TranslatorContext);
     const [text, setText] = React.useState('');
     const [category, setCategory] = React.useState();
+    const [offset, setOffset] = React.useState(initialOffset);
+    const [limit] = React.useState(defaultLimit);
 
     const handleChangeText = event => {
         setText(event.target.value);
@@ -18,6 +23,39 @@ const ActionsBar = ({height, add, addCategory, categories}) => {
     const handleAddNewProduct = () => {
         add({});
     }
+
+    const buildFilterVariables = () => {
+        let filters = {
+            filters: [
+                {
+                    field: 'search',
+                    value: text
+                }
+            ],
+            options:{
+                limit: limit,
+                offset: offset
+            }
+        }
+
+        if(category) filters.filters.push({
+            field: 'category',
+            value: category.toString()
+        });
+
+        return filters;
+    }
+
+    React.useEffect(() => {
+        const filters = buildFilterVariables();
+        
+        clearTimeout(filtersTimeout);
+        filtersTimeout = setTimeout(() => {
+            handleChangeFiltersParent(filters)
+        }, 450);
+
+        // return clearTimeout(filtersTimeout);
+    },[text, category]);
 
     return(
         <Paper
@@ -70,7 +108,6 @@ const ActionsBar = ({height, add, addCategory, categories}) => {
                         margin="normal"
                         variant="outlined"
                         fullWidth={true}
-                        disabled={categories.length === 0}
                     >
                         {categories.map(category => {
                             return(

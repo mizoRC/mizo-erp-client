@@ -10,22 +10,26 @@ import ActionsBar from './ActionsBar';
 import ProductCard from './ProductCard';
 import AddProductModal from './AddProductModal';
 import AddCategoryModal from './AddCategoryModal';
+const limit = 16;
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles
 }));
 
 const PRODUCTS = gql`
-    query products {
-        products {
-            id
-            name
-            brand
-            barcode
-            price
-            image
-            vat
-            categoryId
+    query products($filters: [Filter]!, $options: Options!) {
+        products(filters: $filters, options: $options) {
+            rows{
+                id
+                name
+                brand
+                barcode
+                price
+                image
+                vat
+                categoryId
+            }
+            count
         }
     }
 `;
@@ -81,8 +85,23 @@ const Products = () => {
     const [open, setOpen] = React.useState(false);
     const [openCategory, setOpenCategory] = React.useState(false);
     const [product, setProduct] = React.useState({});
-    const { loading, data } = useQuery(PRODUCTS, {
-        fetchPolicy: "network-only"
+    const [filters, setFilters] = React.useState();
+    const [loadingMore, setLoadingMore] = React.useState(false);
+    const { loading, data, refetch, fetchMore } = useQuery(PRODUCTS, {
+        fetchPolicy: "network-only",
+        notifyOnNetworkStatusChange: true,
+        variables: {
+            filters: [
+                {
+                    field: 'search',
+                    value: ''
+                }
+            ],
+            options: {
+                limit: limit,
+                offset: 0
+            }
+        }
     });
     const [ addProduct, {loading: addingProduct} ] = useMutation(ADD_PRODUCT, {
         refetchQueries: [{query: PRODUCTS}],
@@ -137,85 +156,119 @@ const Products = () => {
         setOpenCategory(false);
     }
 
+    const handleChangeFilters = (newFilters) => {
+        setFilters(newFilters);
+        if(!!refetch) refetch(newFilters);
+    }
+
+    const loadMore = async () => {
+        setLoadingMore(true);
+        await fetchMore({
+			variables: {
+				options: {
+					offset: data.products.rows.length,
+					limit: limit
+				}
+			},
+			updateQuery: (prev, { fetchMoreResult }) => {
+				if (!fetchMoreResult) {
+					return prev;
+				}
+				return {
+					...prev,
+					products:{
+                        ...prev.products,
+                        rows: [
+                            ...prev.products.rows,
+                            ...fetchMoreResult.products.rows
+                        ],
+                        count: fetchMoreResult.products.count
+                    } 
+				};
+			}
+		});
+        setLoadingMore(false);
+    }
+
     return(
         <div className={classes.containerBG}>
-            {(loading || loadingCategories) ? 
+            <Bar/>
+            <div
+                style={{
+                    height: 'calc(100% - 84px)',
+                    width: 'calc(100% - 20px)',
+                    padding: '10px 10px 10px 10px'
+                }}
+            >
+                <div
+                    style={{
+                        height: '100%',
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}
+                >
+                    <ActionsBar 
+                        height={100} 
+                        add={handleOpen} 
+                        addCategory={handleOpenCategory} 
+                        categories={(!!dataCategories && !!dataCategories.categories) ? dataCategories.categories : []}
+                        handleChangeFilters={handleChangeFilters}
+                        loading={loading}
+                    />
+
                     <div
                         style={{
+                            height: 'calc(100% - 150px)',
+                            width: 'calc(100% - 20px)',
                             display: 'flex',
-                            height: '100%',
-                            width: '100%'
+                            marginTop: '30px',
+                            padding: '10px',
+                            backgroundColor: 'rgba(255,255,255,0.2)',
+                            borderRadius: '6px'
                         }}
                     >
-                        <Loading />
-                    </div>
-                :
-                    <>
-                        <Bar/>
-                        <div
-                            style={{
-                                height: 'calc(100% - 84px)',
-                                width: 'calc(100% - 20px)',
-                                padding: '10px 10px 10px 10px'
-                            }}
-                        >
-                            <div
-                                style={{
-                                    height: '100%',
-                                    width: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'column'
-                                }}
-                            >
-                                <ActionsBar 
-                                    height={100} 
-                                    add={handleOpen} 
-                                    addCategory={handleOpenCategory} 
-                                    categories={dataCategories.categories}
-                                />
-
+                        {(loading || loadingCategories) ? 
                                 <div
                                     style={{
-                                        height: 'calc(100% - 150px)',
-                                        width: 'calc(100% - 20px)',
                                         display: 'flex',
-                                        marginTop: '30px',
-                                        padding: '10px',
-                                        backgroundColor: 'rgba(255,255,255,0.2)',
-                                        borderRadius: '6px'
+                                        height: '100%',
+                                        width: '100%'
                                     }}
                                 >
-                                    <Grid container spacing={1} style={{overflowY: 'auto'}}>
-                                        {data.products.map(product => (
-                                            <Grid key={product.id} item xs={12} sm={6} md={3}>
-                                                <ProductCard product={product} action={handleOpen}/>
-                                            </Grid>
-                                        ))}
-                                    </Grid>
+                                    <Loading />
                                 </div>
-                            </div>
-                        </div>
-
-                        {open &&
-                            <AddProductModal 
-                                open={open} 
-                                handleClose={handleClose} 
-                                handleSave={handleSave}
-                                adding={addingProduct}
-                                updating={updatingProduct}
-                                product={product}
-                                categories={dataCategories.categories}
-                            />
+                            :
+                                <Grid container spacing={1} style={{overflowY: 'auto'}}>
+                                    {data.products.rows.map(product => (
+                                        <Grid key={product.id} item xs={12} sm={6} md={3}>
+                                            <ProductCard product={product} action={handleOpen}/>
+                                        </Grid>
+                                    ))}
+                                </Grid>
                         }
+                    </div>
+                </div>
+            </div>
 
-                        <AddCategoryModal
-                            open={openCategory} 
-                            handleClose={handleCloseCategory} 
-                            handleSave={handleSaveCategory}
-                            saving={savingCategory}
-                        />
-                    </>
+            {open &&
+                <AddProductModal 
+                    open={open} 
+                    handleClose={handleClose} 
+                    handleSave={handleSave}
+                    adding={addingProduct}
+                    updating={updatingProduct}
+                    product={product}
+                    categories={dataCategories.categories}
+                />
             }
+
+            <AddCategoryModal
+                open={openCategory} 
+                handleClose={handleCloseCategory} 
+                handleSave={handleSaveCategory}
+                saving={savingCategory}
+            />
         </div>
     )
 }
