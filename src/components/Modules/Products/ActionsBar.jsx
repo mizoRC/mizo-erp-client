@@ -1,18 +1,22 @@
 import React from 'react';
-import { makeStyles, Paper, Grid, Typography, TextField, FormControl, InputLabel, Select, MenuItem, Button, Fab, Tooltip } from '@material-ui/core';
+import { Paper, Grid, Typography, TextField, MenuItem, Button, Fab, Tooltip } from '@material-ui/core';
 import { TranslatorContext } from '../../../contextProviders/Translator';
 
-const ActionsBar = ({height, add, categories}) => {
+const ActionsBar = ({height, add, addCategory, categories}) => {
     const { translations } = React.useContext(TranslatorContext);
     const [text, setText] = React.useState('');
-    const [category, setCategory] = React.useState('');
+    const [category, setCategory] = React.useState();
 
     const handleChangeText = event => {
         setText(event.target.value);
     }
 
-    const handleChangeCategory = () => {
+    const handleChangeCategory = event => {
+        setCategory(event.target.value);
+    }
 
+    const handleAddNewProduct = () => {
+        add({});
     }
 
     return(
@@ -34,7 +38,7 @@ const ActionsBar = ({height, add, categories}) => {
                     </div>
 
                     <div style={{display: 'flex', flexDirection: 'row'}}>
-                        <Button variant="contained" color="primary" style={{marginRight: '6px'}} onClick={add}>
+                        <Button variant="contained" color="primary" style={{marginRight: '6px'}} onClick={handleAddNewProduct}>
                             {translations.add}
                         </Button>
 
@@ -47,7 +51,7 @@ const ActionsBar = ({height, add, categories}) => {
                 <Grid item xs={6} style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                     <TextField
                         id="outlined-search"
-                        label="Required"
+                        label={translations.search}
                         value={text}
                         margin="normal"
                         variant="outlined"
@@ -68,22 +72,21 @@ const ActionsBar = ({height, add, categories}) => {
                         fullWidth={true}
                         disabled={categories.length === 0}
                     >
-                        <MenuItem value="">
-                        </MenuItem>
                         {categories.map(category => {
                             return(
-                                <MenuItem value={category.id}>
+                                <MenuItem key={category.id} value={category.id}>
                                     {category.name}
                                 </MenuItem>
                             )
                         })}
                     </TextField>
                     
-                    {/* <Tooltip title={translations.addCategory}>
+                    <Tooltip title={translations.addCategory}>
                         <Fab 
                             color="primary" 
                             size="small" 
                             aria-label="add"
+                            onClick={addCategory}
                             style={{
                                 marginLeft: '6px',
                                 height: '40px',
@@ -95,7 +98,7 @@ const ActionsBar = ({height, add, categories}) => {
                         >
                             <i className="fas fa-plus"></i>
                         </Fab>
-                    </Tooltip> */}
+                    </Tooltip>
                 </Grid>
             </Grid>
         </Paper>

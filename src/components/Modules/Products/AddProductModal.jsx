@@ -1,23 +1,26 @@
 import React from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Grid, MenuItem, Card, CardActionArea, Tooltip, Fab } from '@material-ui/core';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Grid, MenuItem, Card, CardActionArea, Tooltip, CircularProgress, InputAdornment } from '@material-ui/core';
 import ReactBarcode from 'react-barcode';
 import { TranslatorContext } from '../../../contextProviders/Translator';
 import { toBase64 } from '../../../utils/files';
 import CameraIcon from '../../../assets/camera.svg'
 
-const AddProductModal = ({open, handleClose, handleSave, product, categories}) => {
+const AddProductModal = ({open, handleClose, handleSave, adding, updating, product, categories}) => {
 	const barcodeRef = React.useRef();
 	const fileInput = React.useRef();
 	const { translations } = React.useContext(TranslatorContext);
 	const [name, setName] = React.useState();
+    const [brand, setBrand] = React.useState();
 	const [barcode, setBarcode] = React.useState();
 	const [price, setPrice] = React.useState();
-	const [vat, setVat] = React.useState(21);
+	const [vat, setVat] = React.useState();
 	const [category, setCategory] = React.useState();
-	const [image, setImage] = React.useState((!!product && !!product.image) ? product.image : CameraIcon);
+	const [image, setImage] = React.useState();
 	const [base64Image, setBase64Image] = React.useState();
-	const [showAddCategory, setShowAddCategory] = React.useState(false);
-	const [newCategory, setNewCategory] = React.useState('');
+    const [errorEmptyName, setErrorEmptyName] = React.useState(false);
+    const [errorEmptyBarcode, setErrorEmptyBarcode] = React.useState(false);
+    const [errorEmptyPrice, setErrorEmptyPrice] = React.useState(false);
+    const [errorEmptyVat, setErrorEmptyVat] = React.useState(false);
 
 	React.useEffect(() => {
 		if(!!barcodeRef && !!barcodeRef.current && !!barcodeRef.current.refs && !!barcodeRef.current.refs.renderElement){
@@ -25,8 +28,23 @@ const AddProductModal = ({open, handleClose, handleSave, product, categories}) =
 		}
 	},[barcode]);
 
+    React.useEffect(() => {
+        setName(product.name);
+        setBrand(product.brand);
+        setBarcode(product.barcode);
+        setPrice((!!product && !!product.price) ? product.price : 0);
+        setVat((!!product && !!product.vat) ? product.vat : 21);
+        setCategory(product.categoryId);
+        setImage((!!product && !!product.image) ? product.image : CameraIcon);
+        setBase64Image((!!product && !!product.image) ? product.image : null);
+    }, [product]);
+
 	const handleChangeName = event => {
 		setName(event.target.value);		
+	}
+
+    const handleChangeBrand = event => {
+		setBrand(event.target.value);		
 	}
 	
 	const handleChangeBarcode = event => {
@@ -34,15 +52,15 @@ const AddProductModal = ({open, handleClose, handleSave, product, categories}) =
 	}
 
 	const handleChangePrice = event => {
-		setPrice(event.target.value);
+		setPrice(parseFloat(event.target.value));
 	}
 
 	const handleChangeVat = event => {
-		setVat(event.target.value);
+		setVat(parseFloat(event.target.value));
 	}
 
 	const handleChangeCategory = event => {
-
+        setCategory(event.target.value);
 	}
 
 	const handleChangeImage = async event => {
@@ -58,17 +76,44 @@ const AddProductModal = ({open, handleClose, handleSave, product, categories}) =
         if(!!fileInput && !!fileInput.current) fileInput.current.click();
     }
 
-	const handleChangeNewCategory = event => {
-		setNewCategory(event.target.value);
-	}
+    const checkErrors = () => {
+        let hasErrors = false;
 
-	const handleSaveNewCategory = () => {
-		setShowAddCategory(false);
-	}
+        const isEmptyName = (!name || name === "" || name === null) ? true : false;
+        const isEmptyBarcode = (!barcode || barcode === "" || barcode === null) ? true : false;
+        const isEmptyPrice = (price === "" || price === null || Number.isNaN(price)) ? true : false;
+        const isEmptyVat = (!vat || vat === "" || vat === null) ? true : false; 
 
-	const handleShowNewCategory = () => {
-		setShowAddCategory(!showAddCategory);
-	}
+        setErrorEmptyName(isEmptyName);
+        setErrorEmptyBarcode(isEmptyBarcode);
+        setErrorEmptyPrice(isEmptyPrice);
+        setErrorEmptyVat(isEmptyVat);
+
+        hasErrors = isEmptyName || isEmptyBarcode || isEmptyPrice || isEmptyVat;
+
+        return hasErrors;
+    };
+
+    const save = () => {
+        const hasErrors = checkErrors();
+
+        if(!hasErrors){
+            if(!!handleSave){
+                let productSave = {
+                    name: name,
+                    brand: brand,
+                    barcode: barcode,
+                    price: price,
+                    vat: vat,
+                    categoryId: category,
+                    image: base64Image
+                };
+                if(product.id) productSave.id = product.id;
+
+                handleSave(productSave);
+            }
+        }
+    }
 
 	return (
 		<div>
@@ -104,7 +149,7 @@ const AddProductModal = ({open, handleClose, handleSave, product, categories}) =
 										}}
 									>
 										<CardActionArea onClick={handleImageClick} style={{width: '100%', display: 'flex', flexDirection: 'row'}}>
-											<img alt="product_image" src={image} style={{width: '100%'}}/>
+											<img alt="product_image" src={image} style={{width: '100%', maxHeight: '210px'}}/>
 										</CardActionArea>
 										<input ref={fileInput} type="file" onChange={handleChangeImage} style={{position: 'absolute', width: '0px', height: '0px', left: '-999999px'}}/>
 									</Card>
@@ -143,6 +188,18 @@ const AddProductModal = ({open, handleClose, handleSave, product, categories}) =
 									fullWidth
 									variant="outlined"
 									onChange={handleChangeName}
+                                    error={errorEmptyName}
+								/>
+                                <TextField
+									autoFocus
+									margin="dense"
+									id="name"
+									label={translations.brand}
+									type="text"
+									value={brand}
+									fullWidth
+									variant="outlined"
+									onChange={handleChangeBrand}
 								/>
 								<TextField
 									margin="dense"
@@ -153,6 +210,7 @@ const AddProductModal = ({open, handleClose, handleSave, product, categories}) =
 									fullWidth
 									variant="outlined"
 									onChange={handleChangeBarcode}
+                                    error={errorEmptyBarcode}
 								/>
 								<TextField
 									margin="dense"
@@ -164,6 +222,10 @@ const AddProductModal = ({open, handleClose, handleSave, product, categories}) =
 									fullWidth
 									variant="outlined"
 									onChange={handleChangePrice}
+                                    error={errorEmptyPrice}
+                                    InputProps={{
+                                        endAdornment: <InputAdornment position="end">€</InputAdornment>
+                                    }}
 								/>
 								<TextField
 									margin="dense"
@@ -175,6 +237,10 @@ const AddProductModal = ({open, handleClose, handleSave, product, categories}) =
 									fullWidth
 									variant="outlined"
 									onChange={handleChangeVat}
+                                    error={errorEmptyVat}
+                                    InputProps={{
+                                        endAdornment: <InputAdornment position="end">%</InputAdornment>
+                                    }}
 								/>
 								<div
 									style={{
@@ -195,86 +261,42 @@ const AddProductModal = ({open, handleClose, handleSave, product, categories}) =
 										fullWidth={true}
 										disabled={categories.length === 0}
 									>
-										<MenuItem value="">
+										<MenuItem key={0} value={null}>
+                                            {translations.neither}
 										</MenuItem>
 										{categories.map(category => {
 											return(
-												<MenuItem value={category.id}>
+												<MenuItem key={category.id} value={category.id}>
 													{category.name}
 												</MenuItem>
 											)
 										})}
 									</TextField>
-
-									<Tooltip title={(showAddCategory) ? translations.cancel : translations.addCategory}>
-										<Fab 
-											color="primary" 
-											size="small" 
-											onClick={handleShowNewCategory}
-											style={{
-												marginLeft: '6px',
-												height: '40px',
-												width: '40px',
-												minWidth: '40px',
-												minHeight: '40px',
-												marginTop: '8px'
-											}}
-										>
-											{showAddCategory ?
-													<i className="fas fa-chevron-up"></i>
-												:
-													<i className="fas fa-plus"></i>
-											}
-										</Fab>
-									</Tooltip>
 								</div>
-
-								{showAddCategory &&
-									<div
-										style={{
-											width: '80%',
-											display: 'flex',
-											flexDirection: 'row',
-											marginLeft: '20px'
-										}}
-									>
-										<TextField
-											margin="dense"
-											id="newCategory"
-											label={translations.newCategory}
-											type="text"
-											value={newCategory}
-											fullWidth
-											onChange={handleChangeNewCategory}
-										/>
-
-										<Fab 
-											color="primary" 
-											size="small" 
-											onClick={handleSaveNewCategory}
-											style={{
-												marginLeft: '6px',
-												height: '40px',
-												width: '40px',
-												minWidth: '40px',
-												minHeight: '40px',
-												marginTop: '8px'
-											}}
-										>
-											<i className="far fa-save"></i>
-										</Fab>
-									</div>
-								}
 							</div>
 						</Grid>
 					</Grid>
 				</DialogContent>
 				<DialogActions>
-					<Button onClick={handleClose} color="default">
+					<Button onClick={handleClose} disabled={(adding || updating)} color="default">
 						{translations.cancel}
 					</Button>
-					<Button onClick={handleSave} color="primary">
-						{translations.save}
+					<Button onClick={save} disabled={(adding || updating)} color="primary">
+						<div
+                            style={{
+                                display: 'flex',
+                                flexDirection:' row',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            {translations.save}
+                            {(adding || updating) &&
+                                <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
+                                    <CircularProgress size={20} color="secondary" />
+                                </div>
+                            }
+                        </div>
 					</Button>
 				</DialogActions>
 			</Dialog>

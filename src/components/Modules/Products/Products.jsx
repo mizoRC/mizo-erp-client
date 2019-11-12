@@ -9,6 +9,7 @@ import Loading from '../../Segments/Loading';
 import ActionsBar from './ActionsBar';
 import ProductCard from './ProductCard';
 import AddProductModal from './AddProductModal';
+import AddCategoryModal from './AddCategoryModal';
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles
@@ -19,14 +20,12 @@ const PRODUCTS = gql`
         products {
             id
             name
+            brand
             barcode
             price
             image
             vat
-            category{
-                id
-                name
-            }
+            categoryId
         }
     }
 `;
@@ -67,18 +66,29 @@ const CATEGORIES = gql`
     }
 `;
 
+const ADD_CATEGORY = gql`
+    mutation addCategory($category: CategoryInput!) {
+        addCategory(category: $category) {
+            id
+            name
+        }
+    }
+`;
+
 const Products = () => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
     const [open, setOpen] = React.useState(false);
+    const [openCategory, setOpenCategory] = React.useState(false);
+    const [product, setProduct] = React.useState({});
     const { loading, data } = useQuery(PRODUCTS, {
         fetchPolicy: "network-only"
     });
-    const [ addProduct ] = useMutation(ADD_PRODUCT, {
+    const [ addProduct, {loading: addingProduct} ] = useMutation(ADD_PRODUCT, {
         refetchQueries: [{query: PRODUCTS}],
         awaitRefetchQueries: true
     });
-    const [ updateProduct ] = useMutation(UPDATE_PRODUCT, {
+    const [ updateProduct, {loading: updatingProduct} ] = useMutation(UPDATE_PRODUCT, {
         refetchQueries: [{query: PRODUCTS}],
         awaitRefetchQueries: true
     });
@@ -89,8 +99,14 @@ const Products = () => {
     const { loading: loadingCategories, data: dataCategories } = useQuery(CATEGORIES, {
         fetchPolicy: "network-only"
     });
+    const [ addCategory, {loading: savingCategory} ] = useMutation(ADD_CATEGORY, {
+        refetchQueries: [{query: CATEGORIES}],
+        awaitRefetchQueries: true
+    });
 
     const handleOpen = product => {
+        const {__typename, ...selectedProduct} = product;
+        setProduct(selectedProduct);
         setOpen(true);
     }
 
@@ -98,8 +114,27 @@ const Products = () => {
         setOpen(false);
     }
 
-    const handleSave = () => {
+    const handleSave = async(product) => {
+        if(!!product.id){
+            await updateProduct({variables:{product:product}});
+        }
+        else{
+            await addProduct({variables:{product:product}});
+        }
         setOpen(false);
+    }
+
+    const handleOpenCategory = () => {
+        setOpenCategory(true);
+    }
+
+    const handleCloseCategory = () => {
+        setOpenCategory(false);
+    }
+
+    const handleSaveCategory = async(newCategory) => {
+        await addCategory({variables:{category:{name: newCategory}}});
+        setOpenCategory(false);
     }
 
     return(
@@ -132,7 +167,12 @@ const Products = () => {
                                     flexDirection: 'column'
                                 }}
                             >
-                                <ActionsBar height={100} add={handleOpen} categories={dataCategories.categories}/>
+                                <ActionsBar 
+                                    height={100} 
+                                    add={handleOpen} 
+                                    addCategory={handleOpenCategory} 
+                                    categories={dataCategories.categories}
+                                />
 
                                 <div
                                     style={{
@@ -146,14 +186,8 @@ const Products = () => {
                                     }}
                                 >
                                     <Grid container spacing={1} style={{overflowY: 'auto'}}>
-                                        {[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30].map(item => (
-                                            <Grid item xs={12} sm={6} md={3}>
-                                                <ProductCard action={handleOpen}/>
-                                            </Grid>
-                                        ))}
-
                                         {data.products.map(product => (
-                                            <Grid item xs={12} sm={6} md={3}>
+                                            <Grid key={product.id} item xs={12} sm={6} md={3}>
                                                 <ProductCard product={product} action={handleOpen}/>
                                             </Grid>
                                         ))}
@@ -161,12 +195,24 @@ const Products = () => {
                                 </div>
                             </div>
                         </div>
-                        <AddProductModal 
-                            open={open} 
-                            handleClose={handleClose} 
-                            handleSave={handleSave}
-                            product={{}}
-                            categories={dataCategories.categories}
+
+                        {open &&
+                            <AddProductModal 
+                                open={open} 
+                                handleClose={handleClose} 
+                                handleSave={handleSave}
+                                adding={addingProduct}
+                                updating={updatingProduct}
+                                product={product}
+                                categories={dataCategories.categories}
+                            />
+                        }
+
+                        <AddCategoryModal
+                            open={openCategory} 
+                            handleClose={handleCloseCategory} 
+                            handleSave={handleSaveCategory}
+                            saving={savingCategory}
                         />
                     </>
             }
