@@ -9,7 +9,7 @@ const ActionsBar = ({height, add, addCategory, categories, handleChangeFilters: 
     const { translations } = React.useContext(TranslatorContext);
     const [text, setText] = React.useState('');
     const [category, setCategory] = React.useState();
-    const [offset, setOffset] = React.useState(initialOffset);
+    const [offset] = React.useState(initialOffset);
     const [limit] = React.useState(defaultLimit);
 
     const handleChangeText = event => {
@@ -80,9 +80,9 @@ const ActionsBar = ({height, add, addCategory, categories, handleChangeFilters: 
                             {translations.add}
                         </Button>
 
-                        <Button variant="contained" color="secondary">
+                        {/* <Button variant="contained" color="secondary">
                             {translations.import}
-                        </Button>
+                        </Button> */}
                     </div>
                 </Grid>
 
@@ -109,6 +109,9 @@ const ActionsBar = ({height, add, addCategory, categories, handleChangeFilters: 
                         variant="outlined"
                         fullWidth={true}
                     >
+                        <MenuItem key={0} value={null}>
+                            {translations.neither}
+                        </MenuItem>
                         {categories.map(category => {
                             return(
                                 <MenuItem key={category.id} value={category.id}>

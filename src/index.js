@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './styles/index.css';
  import 'react-toastify/dist/ReactToastify.css';
+ import 'react-perfect-scrollbar/dist/css/styles.css';
 import App from './App.jsx';
 import * as serviceWorker from './serviceWorker';
 

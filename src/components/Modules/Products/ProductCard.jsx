@@ -142,48 +142,39 @@ const ProductCard = ({product, action}) => {
 
                     <Divider style={{width: '98%'}}/> */}
 
+
                     <div
                         style={{
                             width: '100%',
                             display: 'flex',
-                            flexDirection:'row',
                             alignItems: 'center',
                             justifyContent: 'flex-start'
                         }}
                     >
-                        <div
-                            style={{
-                                width: '50%',
-                                display: 'flex',
-                                flexDirection:'row',
-                                alignItems: 'center',
-                                justifyContent: 'flex-start'
-                            }}
-                        >
-                            <Typography variant="subtitle1">
-                                {translations.price}: 
-                            </Typography>
-                            <Typography variant="subtitle2" style={{marginLeft: '8px'}}>
-                                {product.price}€
-                            </Typography>
-                        </div>
+                        <Typography variant="subtitle1">
+                            {translations.price}: 
+                        </Typography>
+                        <Typography variant="subtitle2" style={{marginLeft: '8px'}}>
+                            {product.price}€
+                        </Typography>
+                    </div>
 
-                        <div
-                            style={{
-                                width: '50%',
-                                display: 'flex',
-                                flexDirection:'row',
-                                alignItems: 'center',
-                                justifyContent: 'flex-start'
-                            }}
-                        >
-                            <Typography variant="subtitle1">
-                                {translations.vat}: 
-                            </Typography>
-                            <Typography variant="subtitle2" style={{marginLeft: '8px'}}>
-                                {product.vat}%
-                            </Typography>
-                        </div>
+                    <Divider style={{width: '98%'}}/>
+
+                    <div
+                        style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-start'
+                        }}
+                    >
+                        <Typography variant="subtitle1">
+                            {translations.vat}: 
+                        </Typography>
+                        <Typography variant="subtitle2" style={{marginLeft: '8px'}}>
+                            {product.vat}%
+                        </Typography>
                     </div>
                 </div>
             </CardActionArea>

@@ -2,15 +2,30 @@ import React from 'react';
 import { makeStyles, Grid } from '@material-ui/core';
 import { gql } from 'apollo-boost';
 import { useQuery, useMutation } from '@apollo/react-hooks';
+import PerfectScrollbar from 'react-perfect-scrollbar'
 import { TranslatorContext } from '../../../contextProviders/Translator';
 import * as mainStyles from '../../../styles';
 import Bar from '../../Segments/Bar';
 import Loading from '../../Segments/Loading';
 import ActionsBar from './ActionsBar';
 import ProductCard from './ProductCard';
-import AddProductModal from './AddProductModal';
+import ProductModal from './ProductModal';
 import AddCategoryModal from './AddCategoryModal';
+import loadingWhiteSVG from '../../../assets/loading_white.svg';
 const limit = 16;
+
+const defaultFilters = {
+    filters: [
+        {
+            field: 'search',
+            value: ''
+        }
+    ],
+    options: {
+        limit: limit,
+        offset: 0
+    }
+}
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles
@@ -85,34 +100,22 @@ const Products = () => {
     const [open, setOpen] = React.useState(false);
     const [openCategory, setOpenCategory] = React.useState(false);
     const [product, setProduct] = React.useState({});
-    const [filters, setFilters] = React.useState();
+    const [filters, setFilters] = React.useState(defaultFilters);
     const [loadingMore, setLoadingMore] = React.useState(false);
     const { loading, data, refetch, fetchMore } = useQuery(PRODUCTS, {
         fetchPolicy: "network-only",
-        notifyOnNetworkStatusChange: true,
-        variables: {
-            filters: [
-                {
-                    field: 'search',
-                    value: ''
-                }
-            ],
-            options: {
-                limit: limit,
-                offset: 0
-            }
-        }
+        variables: filters
     });
     const [ addProduct, {loading: addingProduct} ] = useMutation(ADD_PRODUCT, {
-        refetchQueries: [{query: PRODUCTS}],
+        refetchQueries: [{query: PRODUCTS, variables: filters}],
         awaitRefetchQueries: true
     });
     const [ updateProduct, {loading: updatingProduct} ] = useMutation(UPDATE_PRODUCT, {
-        refetchQueries: [{query: PRODUCTS}],
+        refetchQueries: [{query: PRODUCTS, variables: filters}],
         awaitRefetchQueries: true
     });
-    const [ unsubscribeProduct ] = useMutation(UNSUBSCRIBE_PRODUCT, {
-        refetchQueries: [{query: PRODUCTS}],
+    const [ unsubscribeProduct, {loading: unsubscribingProduct} ] = useMutation(UNSUBSCRIBE_PRODUCT, {
+        refetchQueries: [{query: PRODUCTS, variables: filters}],
         awaitRefetchQueries: true
     });
     const { loading: loadingCategories, data: dataCategories } = useQuery(CATEGORIES, {
@@ -143,6 +146,11 @@ const Products = () => {
         setOpen(false);
     }
 
+    const handleUnsubscribe = async(id) => {
+        if(!!id) await unsubscribeProduct({variables:{productId:id}});
+        setOpen(false);
+    }
+
     const handleOpenCategory = () => {
         setOpenCategory(true);
     }
@@ -157,9 +165,19 @@ const Products = () => {
     }
 
     const handleChangeFilters = (newFilters) => {
-        setFilters(newFilters);
-        if(!!refetch) refetch(newFilters);
+        try {
+            setFilters(newFilters);
+            if(!!refetch) refetch(newFilters);
+        } catch (error) {
+            console.warn(error);
+        }
     }
+
+    const onScrollYReachEnd = () => {
+        if((data.products.rows.length < data.products.count) && !loadingMore){
+            loadMore();
+        }
+    };
 
     const loadMore = async () => {
         setLoadingMore(true);
@@ -219,10 +237,24 @@ const Products = () => {
 
                     <div
                         style={{
+                            height: '30px',
+                            minHeight: '30px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white'
+                        }}
+                    >
+                        {(!loading && !loadingCategories) &&
+                            <> {translations.showing} {data.products.rows.length} {translations.of} {data.products.count} </>
+                        }
+                    </div>
+
+                    <div
+                        style={{
                             height: 'calc(100% - 150px)',
                             width: 'calc(100% - 20px)',
                             display: 'flex',
-                            marginTop: '30px',
                             padding: '10px',
                             backgroundColor: 'rgba(255,255,255,0.2)',
                             borderRadius: '6px'
@@ -239,25 +271,41 @@ const Products = () => {
                                     <Loading />
                                 </div>
                             :
-                                <Grid container spacing={1} style={{overflowY: 'auto'}}>
-                                    {data.products.rows.map(product => (
-                                        <Grid key={product.id} item xs={12} sm={6} md={3}>
-                                            <ProductCard product={product} action={handleOpen}/>
-                                        </Grid>
-                                    ))}
-                                </Grid>
+                                <PerfectScrollbar onYReachEnd={onScrollYReachEnd}>
+                                    <Grid container spacing={1} style={{margin: '0px', width: '100%'}}>
+                                        {data.products.rows.map(product => (
+                                            <Grid key={product.id} item xs={12} sm={6} md={4} lg={3}>
+                                                <ProductCard product={product} action={handleOpen}/>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                    {loadingMore && 
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                marginTop: '5px'
+                                            }}
+                                        >
+                                            <img src={loadingWhiteSVG} alt="loadingIcon" style={{maxWidth: "80px"}}/>
+                                        </div>
+                                    }
+                                </PerfectScrollbar>
                         }
                     </div>
                 </div>
             </div>
 
             {open &&
-                <AddProductModal 
+                <ProductModal 
                     open={open} 
                     handleClose={handleClose} 
                     handleSave={handleSave}
+                    handleUnsubscribe={handleUnsubscribe}
                     adding={addingProduct}
                     updating={updatingProduct}
+                    unsubscribing={unsubscribingProduct}
                     product={product}
                     categories={dataCategories.categories}
                 />

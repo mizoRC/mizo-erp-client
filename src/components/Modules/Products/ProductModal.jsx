@@ -1,11 +1,31 @@
 import React from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Grid, MenuItem, Card, CardActionArea, Tooltip, CircularProgress, InputAdornment } from '@material-ui/core';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Grid, MenuItem, Card, CardActionArea, Tooltip, CircularProgress, InputAdornment, makeStyles } from '@material-ui/core';
 import ReactBarcode from 'react-barcode';
 import { TranslatorContext } from '../../../contextProviders/Translator';
-import { toBase64 } from '../../../utils/files';
-import CameraIcon from '../../../assets/camera.svg'
+import { toBase64, reduceBase64Size } from '../../../utils/files';
+import CameraIcon from '../../../assets/camera.svg';
 
-const AddProductModal = ({open, handleClose, handleSave, adding, updating, product, categories}) => {
+const useStyles = makeStyles(theme => ({
+    deleteButton: {
+        boxShadow: 'none',
+        color: "#FF3232",
+        '&:hover': {
+            backgroundColor: "rgb(255,50,50,0.1)",
+            borderColor: "rgb(255,50,50,0.1)",
+            color: "#FF3232",
+            boxShadow: 'none',
+        },
+        '&:active': {
+            boxShadow: 'none',
+        },
+        '&:focus': {
+            boxShadow: '0 0 0 0.2rem rgba(0,123,255,.5)',
+        }
+    }
+}))
+
+const ProductModal = ({open, handleClose, handleSave, handleUnsubscribe, adding, updating, unsubscribing, product, categories}) => {
+    const classes = useStyles();
 	const barcodeRef = React.useRef();
 	const fileInput = React.useRef();
 	const { translations } = React.useContext(TranslatorContext);
@@ -67,8 +87,9 @@ const AddProductModal = ({open, handleClose, handleSave, adding, updating, produ
         if(!!event && !!event.target && !!event.target.files && !!event.target.files[0]){
             const loadedFile = URL.createObjectURL(event.target.files[0]);
             const b64File = await toBase64(event.target.files[0]); 
+            const reducedBase64 = await reduceBase64Size(b64File);
             setImage(loadedFile);
-            setBase64Image(b64File);
+            setBase64Image(reducedBase64);
         }
     }
 
@@ -113,6 +134,10 @@ const AddProductModal = ({open, handleClose, handleSave, adding, updating, produ
                 handleSave(productSave);
             }
         }
+    }
+
+    const unsubscribe = () => {
+        handleUnsubscribe(product.id);
     }
 
 	return (
@@ -191,7 +216,6 @@ const AddProductModal = ({open, handleClose, handleSave, adding, updating, produ
                                     error={errorEmptyName}
 								/>
                                 <TextField
-									autoFocus
 									margin="dense"
 									id="name"
 									label={translations.brand}
@@ -278,11 +302,30 @@ const AddProductModal = ({open, handleClose, handleSave, adding, updating, produ
 					</Grid>
 				</DialogContent>
 				<DialogActions>
-					<Button onClick={handleClose} disabled={(adding || updating)} color="default">
-						{translations.cancel}
-					</Button>
-					<Button onClick={save} disabled={(adding || updating)} color="primary">
-						<div
+                    <Button onClick={unsubscribe} disabled={(adding || updating || unsubscribing)} className={classes.deleteButton}>
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection:' row',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            {translations.delete}
+                            {unsubscribing &&
+                                <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
+                                    <CircularProgress size={20} color="secondary" />
+                                </div>
+                            }
+                        </div>
+                    </Button>
+
+                    <Button onClick={handleClose} disabled={(adding || updating || unsubscribing)} color="default">
+                        {translations.cancel}
+                    </Button>
+
+                    <Button onClick={save} disabled={(adding || updating || unsubscribing)} color="primary">
+                        <div
                             style={{
                                 display: 'flex',
                                 flexDirection:' row',
@@ -297,11 +340,11 @@ const AddProductModal = ({open, handleClose, handleSave, adding, updating, produ
                                 </div>
                             }
                         </div>
-					</Button>
+                    </Button>
 				</DialogActions>
 			</Dialog>
 		</div>
 	);
 }
 
-export default AddProductModal;
+export default ProductModal;
