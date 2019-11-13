@@ -10,7 +10,9 @@ const TranslatorContext = React.createContext({
 export { TranslatorContext };
 
 function getBrowserLanguage(){
-    return navigator.language || navigator.userLanguage;
+    const navLanguage = navigator.language || navigator.userLanguage;
+    const lang = navLanguage.substring(0, 2);
+    return lang;
 }
 
 
