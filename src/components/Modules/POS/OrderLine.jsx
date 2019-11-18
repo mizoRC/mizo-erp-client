@@ -1,8 +1,8 @@
 import React from "react";
-import { makeStyles, FormControl, OutlinedInput, InputAdornment, Paper } from '@material-ui/core';
+import { makeStyles, FormControl, OutlinedInput, InputAdornment, Paper, IconButton } from '@material-ui/core';
 import { TranslatorContext } from '../../../contextProviders/Translator';
 import * as mainStyles from '../../../styles';
-import { primary } from '../../../styles/colors';
+import { primary, error } from '../../../styles/colors';
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles,
@@ -19,10 +19,25 @@ const useStyles = makeStyles(theme => ({
         color: 'white',
         padding: '10px',
         maxWidth: '100%'
+    },
+    deleteButton: {
+        outline: 0,
+        fontSize: 12,
+        height: '30px',
+        width: '30px',
+        padding: '10px 12px',
+        backgroundColor: 'transparent',
+        color: error,
+        '&:hover': {
+            backgroundColor: 'white',
+        },
+        '&:active': {
+            backgroundColor: 'white'
+        }
     }
 }));
 
-const OrderLine = ({line, modifyLine}) => {
+const OrderLine = ({line, modifyLine, deleteLine}) => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
     const [units, setUnits] = React.useState(1);
@@ -37,6 +52,10 @@ const OrderLine = ({line, modifyLine}) => {
             total: total
         }
         modifyLine(modifiedLine);
+    }
+
+    const handleDeleteLine = () => {
+        deleteLine(line.productId);
     }
 
     const handleChangeUnits = event => {
@@ -56,6 +75,11 @@ const OrderLine = ({line, modifyLine}) => {
         handleModifyLine();
     }, [total]);
 
+    /* React.useEffect(() => {
+        setUnits(line.units);
+        setPrice(line.setPrice);
+    },[line]); */
+
 	return (
 		<div
 			style={{
@@ -69,7 +93,7 @@ const OrderLine = ({line, modifyLine}) => {
 		>
 			<div
 				style={{
-					width: "70%",
+					width: "315px",
 					height: "100%",
 					display: "flex",
 					flexDirection: "column",
@@ -136,16 +160,42 @@ const OrderLine = ({line, modifyLine}) => {
 
 			<div
 				style={{
-					width: "30%",
+					width: "135px",
 					height: "100%",
 					display: "flex",
 					alignItems: "center",
-					justifyContent: "center"
+					justifyContent: "center",
+                    flexDirection:'row'
 				}}
 			>
-                <Paper className={classes.totalPaper} elevation={8}>
-				    {total}€
-                </Paper>
+                <div
+                    style={{
+                        width: "100px",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                    }}
+                >
+                    <Paper className={classes.totalPaper} elevation={8}>
+                        {total}€
+                    </Paper>
+                </div>
+
+                <div
+                    style={{
+                        width: "35px",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                    }}
+                >
+                    <IconButton className={classes.deleteButton} aria-label="delete" onClick={handleDeleteLine}>
+                        <i className="fas fa-trash-alt"></i>
+                    </IconButton>
+                </div>
+                
 			</div>
 		</div>
 	);

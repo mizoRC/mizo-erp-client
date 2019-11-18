@@ -10,25 +10,50 @@ const useStyles = makeStyles(theme => ({
     ...mainStyles
 }));
 
-const Order = ({newReading}) => {
+const Order = ({products, newReading}) => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
     const [lines, setLines] = React.useState([]);
     const [total, setTotal] = React.useState(0);
     const [totalTaxes, setTotalTaxes] = React.useState(0);
+    const [customer, setCustomer] = React.useState();
+
+    const checkBarcodeIsInOrder = barcode => {
+        let isInOrder = false;
+
+        lines.forEach(line => {
+            if(line.barcode === barcode) isInOrder = true;
+        })
+
+        return isInOrder;
+    }
 
     const addLine = barcode => {
-        const id = (new Date()).getTime();
-        const newLine = {
-            productId: id,
-            name: `Crema ${id}`,
-            price: 1.50,
-            vat: 21,
-            units: 1,
-            total: 1.50 * 1
-        }
         const newLines = [...lines];
-        newLines.unshift(newLine);
+        const isInOrder = checkBarcodeIsInOrder(barcode);
+
+        if(isInOrder){
+            for (let index = 0; index < newLines.length; index++) {
+                if(newLines[index].barcode === barcode) newLines[index].units = newLines[index].units + 1;
+            }
+        }
+        else{
+            products.forEach(product => {
+                if(product.barcode === barcode){
+                    const newLine = {
+                        productId: product.id,
+                        barcode: product.barcode,
+                        name: `${product.name} ( ${product.brand} )`,
+                        price: product.price,
+                        vat: product.vat,
+                        units: 1,
+                        total: 1 * product.price
+                    }
+                    newLines.unshift(newLine);
+                }
+            });
+        }
+        
         setLines(newLines);
     }
 
@@ -43,6 +68,11 @@ const Order = ({newReading}) => {
         }
         setLines(newLines);
     }
+
+    const deleteLine = (productId) => {
+        const newLines = lines.filter(line => line.productId !== productId);
+        setLines(newLines);
+    };
 
     React.useEffect(() => {
         if(!!newReading && !!newReading.barcode  && (newReading.barcode !== '') && (newReading.barcode !== null)) addLine(newReading.barcode);
@@ -85,8 +115,13 @@ const Order = ({newReading}) => {
                     options={{suppressScrollX: true}}
                 >
                     {lines.map((line, index) => (
-                        <React.Fragment>
-                            <OrderLine key={index} line={line} modifyLine={modifyLine}/>
+                        <React.Fragment key={`fragment-${line.productId}`}>
+                            <OrderLine 
+                                key={`orderline-${line.productId}-${line.price}-${line.units}`} 
+                                line={line} 
+                                modifyLine={modifyLine}
+                                deleteLine={deleteLine}
+                            />
                             {(index < (lines.length - 1)) &&
                                 <Divider key={index}/>
                             }
