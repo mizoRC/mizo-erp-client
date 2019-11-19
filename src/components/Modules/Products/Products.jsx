@@ -271,7 +271,7 @@ const Products = () => {
                                     <Loading />
                                 </div>
                             :
-                                <PerfectScrollbar onYReachEnd={onScrollYReachEnd}>
+                                <PerfectScrollbar onYReachEnd={onScrollYReachEnd} style={{width: '100%'}}>
                                     <Grid container spacing={1} style={{margin: '0px', width: '100%'}}>
                                         {data.products.rows.map(product => (
                                             <Grid key={product.id} item xs={12} sm={6} md={4} lg={3}>
