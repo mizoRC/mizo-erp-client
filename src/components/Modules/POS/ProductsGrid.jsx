@@ -55,7 +55,7 @@ const CATEGORIES = gql`
     }
 `;
 
-const ProductsGrid = () => {
+const ProductsGrid = ({addLine}) => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
     const [filters, setFilters] = React.useState(defaultFilters);
@@ -169,7 +169,7 @@ const ProductsGrid = () => {
                             <Grid container spacing={1} style={{margin: '0px', width: '100%'}}>
                                 {data.products.rows.map(product => (
                                     <Grid key={product.id} item xs={12} sm={6} md={6} lg={4}>
-                                        <ProductCard product={product} action={() => {}}/>
+                                        <ProductCard product={product} action={addLine}/>
                                     </Grid>
                                 ))}
                             </Grid>
