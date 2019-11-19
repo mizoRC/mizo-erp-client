@@ -2,7 +2,7 @@ import React from 'react';
 import MaterialTable from 'material-table';
 import { TranslatorContext } from '../../contextProviders/Translator';
 
-const Table = ({title, columns, data, editable}) => {
+const Table = ({title, columns, data, editable, ...props}) => {
     const { translations } = React.useContext(TranslatorContext);
     const localization = {
         header: { 
@@ -44,6 +44,7 @@ const Table = ({title, columns, data, editable}) => {
             data={data} 
             editable={editable}
             localization={localization}
+            {...props}
         />
     )
 }

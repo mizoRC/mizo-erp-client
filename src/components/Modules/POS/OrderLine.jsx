@@ -40,9 +40,9 @@ const useStyles = makeStyles(theme => ({
 const OrderLine = ({line, modifyLine, deleteLine}) => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
-    const [units, setUnits] = React.useState(1);
+    const [units, setUnits] = React.useState(line.units);
     const [price, setPrice] = React.useState(line.price);
-    const [total, setTotal] = React.useState(1);
+    const [total, setTotal] = React.useState(line.units * line.price);
 
     const handleModifyLine = () => {
         const modifiedLine = {
