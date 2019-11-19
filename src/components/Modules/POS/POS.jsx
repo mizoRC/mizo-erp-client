@@ -7,6 +7,7 @@ import * as mainStyles from '../../../styles';
 import Loading from '../../Segments/Loading';
 import Bar from '../../Segments/Bar';
 import Order from './Order';
+import ProductsGrid from './ProductsGrid';
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles,
@@ -95,16 +96,7 @@ const POS = () => {
                             }}
                         >
                             <Order products={data.products.rows} newReading={reading}/>
-                            <div
-                                style={{
-                                    width:'100%',
-                                    height: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'column'
-                                }}
-                            >
-                                PRODUCTS
-                            </div>
+                            <ProductsGrid />
                         </div>
                 }
             </div>
