@@ -238,7 +238,7 @@ const Company = ({history}) => {
                                                         justifyContent: 'center'
                                                     }}
                                                 >
-                                                    <Card style={{maxWidth: '100%', maxHeight: '200px', backgroundColor: primary}}>
+                                                    <Card style={{maxWidth: '100%', maxHeight: '200px'}}>
                                                         <CardActionArea onClick={handleImageClick} style={{height: '100%', width: '100%'}}>
                                                             <div
                                                                 style={{
