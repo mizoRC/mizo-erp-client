@@ -52,6 +52,28 @@ const PRODUCTS = gql`
     }
 `;
 
+const COMPANY = gql`
+    query company {
+        company {
+            id
+            name
+            country
+            address
+            phone
+            logo
+        }
+    }
+`;
+
+const ADD_ORDER = gql`
+    mutation addOrder($order: OrderInput!) {
+        addOrder(order: $order) {
+            id
+            ticketId
+        }
+    }
+`;
+
 const POS = () => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
@@ -75,6 +97,10 @@ const POS = () => {
             }
         }
     });
+    const { loading: loadingCompany, data: dataCompany } = useQuery(COMPANY, {
+        fetchPolicy: "network-only"
+    });
+    const [ addOrder, {loading: addingOrder} ] = useMutation(ADD_ORDER);
 
     const checkBarcodeIsInOrder = barcode => {
         let isInOrder = false;
@@ -100,7 +126,6 @@ const POS = () => {
                 if(product.barcode === barcode){
                     const newLine = {
                         productId: product.id,
-                        barcode: product.barcode,
                         name: `${product.name} ( ${product.brand} )`,
                         price: product.price,
                         vat: product.vat,
@@ -177,7 +202,7 @@ const POS = () => {
         let newTotalTaxes = 0;
         lines.forEach(line => {
             newTotal = parseFloat((newTotal + line.total).toFixed(2));
-            newTotalTaxes = newTotalTaxes + parseFloat((line.total * (line.vat/100)).toFixed(2));
+            newTotalTaxes = parseFloat((newTotalTaxes + (line.total * (line.vat/100))).toFixed(2));
         });
 
         setTotal(newTotal);
@@ -193,7 +218,7 @@ const POS = () => {
                     width: '100%'
                 }}
             >
-                {loading ? 
+                {(loading || loadingCompany) ? 
                         <div
                             style={{
                                 display: 'flex',
@@ -331,7 +356,11 @@ const POS = () => {
                                     handleDone={handleDonePayment}
                                     lines={lines}
                                     total={total}
+                                    totalTaxes={totalTaxes}
                                     customer={customer}
+                                    company={dataCompany.company}
+                                    addOrder={addOrder}
+                                    addingOrder={addingOrder}
                                 />
                             }
                         </div>

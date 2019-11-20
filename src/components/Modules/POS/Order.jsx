@@ -3,9 +3,6 @@ import { Divider } from '@material-ui/core';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import OrderLine from './OrderLine';
 
-
-
-
 const Order = ({lines, modifyLine, deleteLine}) => {
     return(
         <div
