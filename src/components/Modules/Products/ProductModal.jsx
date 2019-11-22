@@ -302,23 +302,25 @@ const ProductModal = ({open, handleClose, handleSave, handleUnsubscribe, adding,
 					</Grid>
 				</DialogContent>
 				<DialogActions>
-                    <Button onClick={unsubscribe} disabled={(adding || updating || unsubscribing)} className={classes.deleteButton}>
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection:' row',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            {translations.delete}
-                            {unsubscribing &&
-                                <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
-                                    <CircularProgress size={20} color="secondary" />
-                                </div>
-                            }
-                        </div>
-                    </Button>
+                    {(!!product && !!product.id) &&
+                        <Button onClick={unsubscribe} disabled={(adding || updating || unsubscribing)} className={classes.deleteButton}>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection:' row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                {translations.delete}
+                                {unsubscribing &&
+                                    <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
+                                        <CircularProgress size={20} color="secondary" />
+                                    </div>
+                                }
+                            </div>
+                        </Button>
+                    }
 
                     <Button onClick={handleClose} disabled={(adding || updating || unsubscribing)} color="default">
                         {translations.cancel}
