@@ -126,6 +126,7 @@ const POS = () => {
                 if(product.barcode === barcode){
                     const newLine = {
                         productId: product.id,
+                        barcode: product.barcode,
                         name: `${product.name} ( ${product.brand} )`,
                         price: product.price,
                         vat: product.vat,
