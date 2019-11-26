@@ -1,10 +1,11 @@
 import React from "react";
-import { makeStyles, Table, TableHead, TableBody, TableRow, TableCell, IconButton } from "@material-ui/core";
+import { makeStyles, Table, TableHead, TableBody, TableRow, TableCell } from "@material-ui/core";
 import { gql } from "apollo-boost";
-import { useQuery, useMutation } from "@apollo/react-hooks";
-import { format } from 'date-fns';
+import { useQuery } from "@apollo/react-hooks";
 import PerfectScrollbar from "react-perfect-scrollbar";
 import { TranslatorContext } from "../../../contextProviders/Translator";
+import { PAYMENT_METHODS } from '../../../constants';
+import { formatDate } from '../../../utils/format';
 import * as mainStyles from "../../../styles";
 import Bar from "../../Segments/Bar";
 import Loading from "../../Segments/Loading";
@@ -39,6 +40,7 @@ const ORDERS = gql`
 				ticketId
 				total
 				customer{
+                    id
                     name
                 }
 				employee{
@@ -53,6 +55,19 @@ const ORDERS = gql`
 	}
 `;
 
+const COMPANY = gql`
+    query company {
+        company {
+            id
+            name
+            country
+            address
+            phone
+            logo
+        }
+    }
+`;
+
 const Accounting = () => {
 	const classes = useStyles();
 	const { translations } = React.useContext(TranslatorContext);
@@ -64,17 +79,9 @@ const Accounting = () => {
 		fetchPolicy: "network-only",
 		variables: filters
 	});
-
-    const formatDate = date => {
-        try {
-            
-            const correctUnix = parseInt(date / 1000);
-            const dateFormated = format(new Date(correctUnix * 1000), 'dd/MM/yyyy HH:mm:ss');
-            return dateFormated
-        } catch (error) {
-            return "";
-        }
-    }
+    const { loading: loadingCompany, data: dataCompany } = useQuery(COMPANY, {
+        fetchPolicy: "network-only"
+    });
 
 	const handleOpen = order => {
 		const { __typename, ...selectedOrder } = order;
@@ -180,7 +187,7 @@ const Accounting = () => {
 							borderRadius: "6px"
 						}}
 					>
-						{loading ? (
+						{(loading || loadingCompany) ? (
 							<div
 								style={{
 									display: "flex",
@@ -237,6 +244,7 @@ const Accounting = () => {
                                                 role="checkbox"
                                                 tabIndex={-1}
                                                 key={order.id}
+                                                onClick={() => {handleOpen(order)}}
                                             >
                                                 {/* <TableCell align="center">
                                                     <IconButton 
@@ -256,7 +264,11 @@ const Accounting = () => {
                                                     {order.total}
                                                 </TableCell>
                                                 <TableCell align="center">
-                                                    {order.paymentMethod}
+                                                    {(order.paymentMethod === PAYMENT_METHODS.CASH) ?
+                                                        <i className="far fa-money-bill-alt" style={{marginRight: '10px'}}></i>
+                                                        :
+                                                        <i className="far fa-credit-card" style={{marginRight: '10px'}}></i>
+                                                    }
                                                 </TableCell>
                                                 <TableCell align="center">
                                                     {(!!order.customer && !!order.customer.name) ? order.customer.name : ""}
@@ -288,7 +300,7 @@ const Accounting = () => {
 			</div>
 
 			{open && !!order && !!order.id && (
-				<OrderModal open={open} handleClose={handleClose} orderId={order.id} />
+				<OrderModal open={open} handleClose={handleClose} ticketId={order.ticketId} company={dataCompany.company} customerId={(!!order && !!order.customer && order.customer.id) ? order.customer.id : null} />
 			)}
 		</div>
 	);

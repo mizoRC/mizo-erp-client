@@ -1,9 +1,39 @@
 import React from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Grid, MenuItem, Card, CardActionArea, Tooltip, CircularProgress, InputAdornment, makeStyles } from '@material-ui/core';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Table, TableHead, TableBody, TableRow, TableCell, makeStyles } from '@material-ui/core';
+import { gql } from "apollo-boost";
+import { useQuery } from "@apollo/react-hooks";
 import ReactBarcode from 'react-barcode';
+import PerfectScrollbar from 'react-perfect-scrollbar';
 import { TranslatorContext } from '../../../contextProviders/Translator';
-import { toBase64, reduceBase64Size } from '../../../utils/files';
-import CameraIcon from '../../../assets/camera.svg';
+import { PAYMENT_METHODS } from '../../../constants';
+import { primary } from '../../../styles/colors';
+import { formatDate } from '../../../utils/format';
+import Loading from '../../Segments/Loading';
+import Ticket from '../../Segments/Ticket';
+import { printTicket } from '../../../utils/print';
+
+const ORDER = gql`
+	query order($ticketId: String!, $customerId: Int) {
+		order(ticketId: $ticketId, customerId: $customerId) {
+            id
+            ticketId
+            total
+            customer{
+                id
+                name
+            }
+            lines {
+                name
+                price
+                vat
+                units 
+                total
+            }
+            paymentMethod
+            creationDate
+		}
+	}
+`;
 
 const useStyles = makeStyles(theme => ({
     deleteButton: {
@@ -24,120 +54,26 @@ const useStyles = makeStyles(theme => ({
     }
 }))
 
-const OrderModal = ({open, handleClose, orderId, product, handleSave, handleUnsubscribe, categories, adding, updating, unsubscribing}) => {
+const OrderModal = ({open, handleClose, ticketId, company, customerId}) => {
     const classes = useStyles();
 	const barcodeRef = React.useRef();
-	const fileInput = React.useRef();
 	const { translations } = React.useContext(TranslatorContext);
-	const [name, setName] = React.useState();
-    const [brand, setBrand] = React.useState();
-	const [barcode, setBarcode] = React.useState();
-	const [price, setPrice] = React.useState();
-	const [vat, setVat] = React.useState();
-	const [category, setCategory] = React.useState();
-	const [image, setImage] = React.useState();
-	const [base64Image, setBase64Image] = React.useState();
-    const [errorEmptyName, setErrorEmptyName] = React.useState(false);
-    const [errorEmptyBarcode, setErrorEmptyBarcode] = React.useState(false);
-    const [errorEmptyPrice, setErrorEmptyPrice] = React.useState(false);
-    const [errorEmptyVat, setErrorEmptyVat] = React.useState(false);
+    const { loading, data } = useQuery(ORDER, {
+		fetchPolicy: "network-only",
+		variables: {
+            ticketId: ticketId,
+            customerId: customerId
+        }
+	});
 
 	React.useEffect(() => {
-		if(!!barcodeRef && !!barcodeRef.current && !!barcodeRef.current.refs && !!barcodeRef.current.refs.renderElement){
+		if(!!data && !!data.order && !!barcodeRef && !!barcodeRef.current && !!barcodeRef.current.refs && !!barcodeRef.current.refs.renderElement){
 			barcodeRef.current.refs.renderElement.setAttribute('width','100%');
 		}
-	},[barcode]);
+	},[data]);
 
-    React.useEffect(() => {
-        setName(product.name);
-        setBrand(product.brand);
-        setBarcode(product.barcode);
-        setPrice((!!product && !!product.price) ? product.price : 0);
-        setVat((!!product && !!product.vat) ? product.vat : 21);
-        setCategory(product.categoryId);
-        setImage((!!product && !!product.image) ? product.image : CameraIcon);
-        setBase64Image((!!product && !!product.image) ? product.image : null);
-    }, [product]);
-
-	const handleChangeName = event => {
-		setName(event.target.value);		
-	}
-
-    const handleChangeBrand = event => {
-		setBrand(event.target.value);		
-	}
-	
-	const handleChangeBarcode = event => {
-		setBarcode(event.target.value);
-	}
-
-	const handleChangePrice = event => {
-		setPrice(parseFloat(event.target.value));
-	}
-
-	const handleChangeVat = event => {
-		setVat(parseFloat(event.target.value));
-	}
-
-	const handleChangeCategory = event => {
-        setCategory(event.target.value);
-	}
-
-	const handleChangeImage = async event => {
-        if(!!event && !!event.target && !!event.target.files && !!event.target.files[0]){
-            const loadedFile = URL.createObjectURL(event.target.files[0]);
-            const b64File = await toBase64(event.target.files[0]); 
-            const reducedBase64 = await reduceBase64Size(b64File);
-            setImage(loadedFile);
-            setBase64Image(reducedBase64);
-        }
-    }
-
-	const handleImageClick = () => {
-        if(!!fileInput && !!fileInput.current) fileInput.current.click();
-    }
-
-    const checkErrors = () => {
-        let hasErrors = false;
-
-        const isEmptyName = (!name || name === "" || name === null) ? true : false;
-        const isEmptyBarcode = (!barcode || barcode === "" || barcode === null) ? true : false;
-        const isEmptyPrice = (price === "" || price === null || Number.isNaN(price)) ? true : false;
-        const isEmptyVat = (!vat || vat === "" || vat === null) ? true : false; 
-
-        setErrorEmptyName(isEmptyName);
-        setErrorEmptyBarcode(isEmptyBarcode);
-        setErrorEmptyPrice(isEmptyPrice);
-        setErrorEmptyVat(isEmptyVat);
-
-        hasErrors = isEmptyName || isEmptyBarcode || isEmptyPrice || isEmptyVat;
-
-        return hasErrors;
-    };
-
-    const save = () => {
-        const hasErrors = checkErrors();
-
-        if(!hasErrors){
-            if(!!handleSave){
-                let productSave = {
-                    name: name,
-                    brand: brand,
-                    barcode: barcode,
-                    price: price,
-                    vat: vat,
-                    categoryId: category,
-                    image: base64Image
-                };
-                if(product.id) productSave.id = product.id;
-
-                handleSave(productSave);
-            }
-        }
-    }
-
-    const unsubscribe = () => {
-        handleUnsubscribe(product.id);
+    const handlePrint = () => {
+        printTicket();
     }
 
 	return (
@@ -148,198 +84,246 @@ const OrderModal = ({open, handleClose, orderId, product, handleSave, handleUnsu
 				disableBackdropClick={true}
 				disableEscapeKeyDown={true}
 				fullWidth={true}
-				maxWidth="sm"
+				maxWidth="md"
 			>
 				<DialogTitle style={{textAlign: 'center'}}>
-					{translations.product}
+					{translations.invoice}
 				</DialogTitle>
 				<DialogContent>
-					<Grid container spacing={4}>
-						<Grid item xs={12} sm={6} md={4} lg={4} xl={3}>
+                    {loading ? 
 							<div
 								style={{
-									display: 'flex',
-									flexDirection: 'column',
-									alignItems: 'center',
-									justifyContent: 'center',
-									padding: '4px',
-    								height: '100%'
+									display: "flex",
+									height: "100%",
+									width: "100%"
 								}}
 							>
-								<Tooltip title={translations.changeImage}>
-									<Card
-										style={{
-											display: 'flex',
-											width: '100%'
-										}}
-									>
-										<CardActionArea onClick={handleImageClick} style={{width: '100%', display: 'flex', flexDirection: 'row'}}>
-											<img alt="product_image" src={image} style={{width: '100%', maxHeight: '210px'}}/>
-										</CardActionArea>
-										<input ref={fileInput} type="file" onChange={handleChangeImage} style={{position: 'absolute', width: '0px', height: '0px', left: '-999999px'}}/>
-									</Card>
-								</Tooltip>
-
-								{barcode && (barcode !== '') &&
-									<div style={{width: '100%', maxWidth: '100%'}}>
-										<ReactBarcode 
-											ref={barcodeRef} 
-											value={barcode} 
-											format={"EAN13"} 
-											height={40}
-										/>
-									</div>
-								}
+								<Loading />
 							</div>
-						</Grid>
+						: 
+                            <div
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        width: '50%',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        margin: '15px',
+                                        backgroundColor: "#EDEFF2",
+                                        borderRadius: '6px'
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            width: '100%',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            padding: '10px'
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                fontSize: '12px',
+                                                marginBottom: '10px'
+                                            }}
+                                        >
+                                            {translations.simplifiedInvoice}: {data.order.ticketId}
+                                        </div>
 
-						<Grid item xs={12} sm={6} md={8} lg={8} xl={9}>
-							<div
-								style={{
-									display: 'flex',
-									flexDirection: 'column',
-									width: '100%',
-									alignItems: 'center',
-									justifyContent: 'center'
-								}}
-							>
-								<TextField
-									autoFocus
-									margin="dense"
-									id="name"
-									label={translations.name}
-									type="text"
-									value={name}
-									fullWidth
-									variant="outlined"
-									onChange={handleChangeName}
-                                    error={errorEmptyName}
-								/>
-                                <TextField
-									margin="dense"
-									id="name"
-									label={translations.brand}
-									type="text"
-									value={brand}
-									fullWidth
-									variant="outlined"
-									onChange={handleChangeBrand}
-								/>
-								<TextField
-									margin="dense"
-									id="barcode"
-									label={translations.barcode}
-									type="text"
-									value={barcode}
-									fullWidth
-									variant="outlined"
-									onChange={handleChangeBarcode}
-                                    error={errorEmptyBarcode}
-								/>
-								<TextField
-									margin="dense"
-									id="price"
-									label={translations.price}
-									type="number" 
-									inputProps={{ min: "0", step: "0.01" }}
-									value={price}
-									fullWidth
-									variant="outlined"
-									onChange={handleChangePrice}
-                                    error={errorEmptyPrice}
-                                    InputProps={{
-                                        endAdornment: <InputAdornment position="end">€</InputAdornment>
+                                        <div 
+                                            style={{
+                                                width: '100%', 
+                                                maxWidth: 'calc(100% - 10px)', 
+                                                maxHeight: '50px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}
+                                        >
+                                            <ReactBarcode 
+                                                ref={barcodeRef} 
+                                                value={data.order.ticketId} 
+                                                format={"CODE128"} 
+                                                height={100}
+                                                displayValue={false}
+                                            />
+                                        </div>
+                                    </div>
+                                
+                                    <div
+                                        style={{
+                                            width: '100%',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'flex-start',
+                                            padding: '10px'
+                                        }}
+                                    >
+                                        <div style={{width: 'calc(100% - 10px)', display: 'flex', marginBottom: '10px'}}>
+                                            {translations.date}: {formatDate(data.order.creationDate)}
+                                        </div>
+
+                                        <div style={{width: 'calc(100% - 10px)', display: 'flex', marginBottom: '10px'}}>
+                                            {translations.paymentMethod}: {(data.order.paymentMethod === PAYMENT_METHODS.CASH) ? translations.cash : translations.card }
+                                        </div>
+
+                                        <div style={{width: 'calc(100% - 10px)', display: 'flex', marginBottom: '10px'}}>
+                                            {translations.total}: {data.order.total}€
+                                        </div>
+
+                                        {(!!data && !!data.order && !!data.order.customer && !!data.order.customer.name) &&
+                                            <div style={{width: 'calc(100% - 10px)', display: 'flex', marginBottom: '10px'}}>
+                                                {translations.customer}: {data.order.customer.name}
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            width: 'calc(100% - 10px)',
+                                            height: '250px',
+                                            maxHeight: '250px',
+                                            marginTop: '10px',
+                                            marginBottom: '10px'
+                                        }}
+                                    >
+                                        <PerfectScrollbar
+                                            style={{ width: "100%" }}
+                                        >
+                                            <Table stickyHeader aria-label="sticky table" style={{backgroundColor: 'white'}}>
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableCell>
+                                                            {translations.name}
+                                                        </TableCell>
+                                                        <TableCell
+                                                            align="right"
+                                                        >
+                                                            {translations.price}
+                                                        </TableCell>
+                                                        <TableCell
+                                                            align="right"
+                                                        >
+                                                            {translations.uts}
+                                                        </TableCell>
+                                                        <TableCell
+                                                            align="right"
+                                                        >
+                                                            {translations.vat}
+                                                        </TableCell>
+
+                                                        <TableCell
+                                                            align="right"
+                                                        >
+                                                            {translations.total}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {data.order.lines.map(line => (
+                                                        <TableRow
+                                                            hover
+                                                            role="checkbox"
+                                                            tabIndex={-1}
+                                                            key={line.id}
+                                                        >
+                                                            <TableCell>
+                                                                {line.name}
+                                                            </TableCell>
+                                                            <TableCell
+                                                                align="right"
+                                                            >
+                                                                {line.price}
+                                                            </TableCell>
+                                                            <TableCell
+                                                                align="right"
+                                                            >
+                                                                {line.units}
+                                                            </TableCell>
+                                                            <TableCell
+                                                                align="right"
+                                                            >
+                                                                {line.vat}
+                                                            </TableCell>
+
+                                                            <TableCell
+                                                                align="right"
+                                                            >
+                                                                {line.total}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </PerfectScrollbar>
+                                    </div>
+                                </div>
+
+                                <div
+                                    style={{
+                                        width: '50%',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderLeft: `1px dashed ${primary}`,
+                                        padding: '10px'
                                     }}
-								/>
-								<TextField
-									margin="dense"
-									id="vat"
-									label={translations.vat}
-									type="number" 
-									inputProps={{ min: "0", step: "0.1" }}
-									value={vat}
-									fullWidth
-									variant="outlined"
-									onChange={handleChangeVat}
-                                    error={errorEmptyVat}
-                                    InputProps={{
-                                        endAdornment: <InputAdornment position="end">%</InputAdornment>
-                                    }}
-								/>
-								<div
-									style={{
-										width: '100%',
-										display: 'flex',
-										flexDirection: 'row',
-										alignItems: 'center'
-									}}
-								>
-									<TextField
-										id="outlined-select-currency"
-										select
-										label={translations.category}
-										value={category}
-										onChange={handleChangeCategory}
-										margin="normal"
-										variant="outlined"
-										fullWidth={true}
-										disabled={categories.length === 0}
-									>
-										<MenuItem key={0} value={null}>
-                                            {translations.neither}
-										</MenuItem>
-										{categories.map(category => {
-											return(
-												<MenuItem key={category.id} value={category.id}>
-													{category.name}
-												</MenuItem>
-											)
-										})}
-									</TextField>
-								</div>
-							</div>
-						</Grid>
-					</Grid>
+                                >
+                                    <Button 
+                                        variant="contained" 
+                                        color="primary"
+                                        style={{marginBottom: '10px', width: '330px'}}
+                                        onClick={handlePrint}
+                                    >
+                                        <i className="fas fa-print" style={{marginRight: '10px'}}></i>
+                                        {translations.printTicket}
+                                    </Button>
+                                    <div
+                                        style={{
+                                            width: '330px',
+                                            minWidth: '330px',
+                                            maxWidth: '330px',
+                                            height: '550px',
+                                            minHeight: '550px',
+                                            maxHeight: '550px',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            border: '2px solid #C8CED8'
+                                        }}
+                                    >
+                                        <PerfectScrollbar 
+                                            options={{suppressScrollX: true}}
+                                        >
+                                            <Ticket 
+                                                company={company}
+                                                order={data.order}
+                                            />
+                                        </PerfectScrollbar>
+                                    </div>		
+                                </div>	
+                            </div>
+                    }
 				</DialogContent>
 				<DialogActions>
-                    <Button onClick={unsubscribe} disabled={(adding || updating || unsubscribing)} className={classes.deleteButton}>
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection:' row',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            {translations.delete}
-                            {unsubscribing &&
-                                <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
-                                    <CircularProgress size={20} color="secondary" />
-                                </div>
-                            }
-                        </div>
-                    </Button>
-
-                    <Button onClick={handleClose} disabled={(adding || updating || unsubscribing)} color="default">
-                        {translations.cancel}
-                    </Button>
-
-                    <Button onClick={save} disabled={(adding || updating || unsubscribing)} color="primary">
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection:' row',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            {translations.save}
-                            {(adding || updating) &&
-                                <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
-                                    <CircularProgress size={20} color="secondary" />
-                                </div>
-                            }
-                        </div>
+                    <Button onClick={handleClose} color="primary">
+                        {translations.accept}
                     </Button>
 				</DialogActions>
 			</Dialog>
