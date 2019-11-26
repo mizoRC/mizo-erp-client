@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactBarcode from 'react-barcode';
 import { TranslatorContext } from '../../contextProviders/Translator';
+import { formatOnlyDate, formatOnlyTime } from '../../utils/format';
 
 const Ticket = ({order, company}) => {
     const barcodeRef = React.useRef();
@@ -19,12 +20,18 @@ const Ticket = ({order, company}) => {
     const getCurrentDate = () => {
         let date = new Date();
         let dateString = [pad(date.getDate()), pad(date.getMonth()+1), date.getFullYear()].join('/');
+
+        if(order.creationDate) dateString = formatOnlyDate(order.creationDate);
+
         return dateString;
     }
 
     const getCurrentTime = () => {
         let date = new Date();
         let timeString = [pad(date.getHours()), pad(date.getMinutes())].join(':');
+
+        if(order.creationDate) timeString = formatOnlyTime(order.creationDate);
+
         return timeString;
     }
 
