@@ -3,6 +3,7 @@ import { Paper, Grid, TextField } from '@material-ui/core';
 import DateFnsUtils from '@date-io/date-fns';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
 import { TranslatorContext } from '../../../contextProviders/Translator';
+import { formatSearchDate } from '../../../utils/format'; 
 const defaultLimit = 16;
 const initialOffset = 0;
 let filtersTimeout;
@@ -10,7 +11,7 @@ let filtersTimeout;
 const ActionsBar = ({height, handleChangeFilters: handleChangeFiltersParent, loading}) => {
     const { translations } = React.useContext(TranslatorContext);
     const [text, setText] = React.useState('');
-    const [date, setDate] = React.useState(new Date());
+    const [date, setDate] = React.useState();
     const [offset] = React.useState(initialOffset);
     const [limit] = React.useState(defaultLimit);
 
@@ -36,10 +37,10 @@ const ActionsBar = ({height, handleChangeFilters: handleChangeFiltersParent, loa
             }
         }
 
-        /* if(category) filters.filters.push({
-            field: 'category',
-            value: category.toString()
-        }); */
+        if(date) filters.filters.push({
+            field: 'date',
+            value: formatSearchDate(date)
+        });
 
         return filters;
     }
@@ -53,7 +54,7 @@ const ActionsBar = ({height, handleChangeFilters: handleChangeFiltersParent, loa
         }, 450);
 
         // return clearTimeout(filtersTimeout);
-    },[text]);
+    },[text, date]);
 
     return(
         <Paper
