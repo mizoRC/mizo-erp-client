@@ -11,7 +11,6 @@ import Bar from "../../Segments/Bar";
 import Loading from "../../Segments/Loading";
 import ActionsBar from "./ActionsBar";
 import OrderModal from "./OrderModal";
-
 import loadingWhiteSVG from "../../../assets/loading_white.svg";
 const limit = 16;
 

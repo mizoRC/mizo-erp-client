@@ -85,6 +85,7 @@ const ActionsBar = ({height, handleChangeFilters: handleChangeFiltersParent, loa
                         <KeyboardDatePicker
                             disableToolbar
                             variant="inline"
+                            inputVariant="outlined"
                             format="dd/MM/yyyy"
                             margin="normal"
                             id="date-picker-inline"

@@ -74,7 +74,7 @@ const GridCard = ({title, img, action}) => {
                     }}
                 >
                     <img 
-                        alt="Employees" 
+                        alt="card_img" 
                         src={img} 
                         className={(breakpoint === "xs" || breakpoint === "sm" || breakpoint === "md" || breakpoint === "lg") ? classes.cardSlimImg : classes.cardXLImg}
                     />
