@@ -40,6 +40,7 @@ const PARTS = gql`
 				id
                 partId
                 date
+                address
                 reason
                 type
                 finished
