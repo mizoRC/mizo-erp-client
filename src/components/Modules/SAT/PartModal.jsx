@@ -1,8 +1,7 @@
 import React from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid, FormControl, FormLabel, FormGroup, FormControlLabel, Checkbox, RadioGroup, Radio, makeStyles } from '@material-ui/core';
-import { Autocomplete } from '@material-ui/lab';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid, FormControl, FormLabel, FormGroup, FormControlLabel, Checkbox, RadioGroup, Radio, MenuItem, makeStyles } from '@material-ui/core';
 import DateFnsUtils from '@date-io/date-fns';
-import { MuiPickersUtilsProvider, KeyboardDateTimePicker } from '@material-ui/pickers';
+import { MuiPickersUtilsProvider, DateTimePicker } from '@material-ui/pickers';
 import { v4 } from 'uuid';
 import { TranslatorContext } from '../../../contextProviders/Translator';
 
@@ -44,6 +43,12 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
     const [type, setType] = React.useState(defaultServiceTypes);
     const [finished, setFinished] = React.useState(false);
     const [notFinishedReason, setNotFinishedReason] = React.useState();
+    const [errorEmptyCustomer, setErrorEmptyCustomer] = React.useState(false);
+    const [errorEmptyAddress, setErrorEmptyAddress] = React.useState(false);
+    const [errorEmptyEmployee, setErrorEmptyEmployee] = React.useState(false);
+    const [errorEmptyDate, setErrorEmptyDate] = React.useState(false);
+    const [errorEmptyReason, setErrorEmptyReason] = React.useState(false);
+    const [errorEmptyType, setErrorEmptyType] = React.useState(false);
 
      React.useEffect(() => {
         setPartId((!!part && !!part.partId) ? part.partId : v4());
@@ -57,9 +62,19 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
         setNotFinishedReason(part.notFinishedReason);
     }, [part]);
 
-    const handleChangeCustomer = (event, newValue) => {
-        console.info('CHANGE CUSTOMER NEWVALUE', newValue);
-        setCustomer(newValue);
+    const getCustomerAddressById = id => {
+        let address = "";
+        customers.forEach(customer => {
+            if(customer.id === id) address =  customer.address;
+        })
+        return address;
+    }
+
+    const handleChangeCustomer = (event) => {
+        const customerId = event.target.value;
+        setCustomer(customerId);
+        const address = getCustomerAddressById(customerId);
+        setAddress(address);
     }
 
     const handleChangeAddress = event => {
@@ -70,8 +85,8 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
         setDate(date);
     };
 
-    const handleChangeEmployee = (event, newValue) => {
-        setEmployee(newValue);
+    const handleChangeEmployee = (event) => {
+        setEmployee(event.target.value);
     }
 
     const handleChangeType = name => event => {
@@ -88,6 +103,37 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
 
     const handleChangeNotFinishedReason = event => {
         setNotFinishedReason(event.target.value);
+    }
+
+    const checkErrors = () => {
+        let hasErrors = false;
+
+        const isEmptyCustomer = (!customer || customer === "" || customer === null) ? true : false;
+        const isEmptyAddress = (!address || address === "" || address === null) ? true : false;
+        const isEmptyEmployee = (!employee || employee === "" || employee === null) ? true : false;
+        const isEmptyDate = (!date || date === "" || date === null) ? true : false; 
+        const isEmptyReason = (!reason || reason === "" || reason === null) ? true : false; 
+        const isEmptyType = (!type.mounting && !type.maintenance && !type.repair && !type.others) ? true : false; 
+
+        setErrorEmptyCustomer(isEmptyCustomer);
+        setErrorEmptyAddress(isEmptyAddress);
+        setErrorEmptyEmployee(isEmptyEmployee);
+        setErrorEmptyDate(isEmptyDate);
+        setErrorEmptyReason(isEmptyReason);
+        setErrorEmptyType(isEmptyType);
+
+        hasErrors = isEmptyCustomer || isEmptyAddress || isEmptyEmployee || isEmptyDate || isEmptyReason || isEmptyType;
+
+        return hasErrors;
+    };
+
+    const save = () => {
+        const hasErrors = checkErrors();
+
+        if(!hasErrors){
+            //TO-DO SAVE
+            // handleSave();
+        }
     }
 
 	return (
@@ -119,32 +165,29 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                     />
                                 </Grid>
                                 <Grid container item xs={12}>
-                                    <Autocomplete
-                                        id="autocompleteCustomer"
-                                        options={customers}
-                                        getOptionLabel={option => option.name}
-                                        style={{ width: '100%' }}
-                                        autoHighlight
-                                        value={customer}
-                                        onChange={handleChangeCustomer}
-                                        renderOption={option => (
-                                            <React.Fragment>
-                                                {option.name}
-                                            </React.Fragment>
-                                        )}
-                                        renderInput={params => (
-                                            <TextField 
-                                                {...params} 
-                                                label={translations.customer}
-                                                variant="outlined" 
-                                                fullWidth  
-                                                inputProps={{
-                                                    ...params.inputProps,
-                                                    autoComplete: 'disabled', // disable autocomplete and autofill
-                                                }}
-                                            />
-                                        )}
-                                    />
+                                    <TextField
+										id="outlined-select-customer"
+										select
+										label={translations.customer}
+										value={customer}
+										onChange={handleChangeCustomer}
+										margin="normal"
+										variant="outlined"
+										fullWidth={true}
+                                        error={errorEmptyCustomer}
+										disabled={customers.length === 0}
+									>
+										<MenuItem key={0} value={null}>
+                                            {translations.neither}
+										</MenuItem>
+										{customers.map(customer => {
+											return(
+												<MenuItem key={customer.id} value={customer.id}>
+													{customer.name}
+												</MenuItem>
+											)
+										})}
+									</TextField>
                                 </Grid>
                                 <Grid container item xs={12}>
                                     <TextField
@@ -155,6 +198,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                         fullWidth
                                         variant="outlined"
                                         onChange={handleChangeAddress}
+                                        error={errorEmptyAddress}
                                     />
                                 </Grid>
                             </Grid>
@@ -162,55 +206,50 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                             <Grid container item xs={6}>
                                 <Grid container item xs={12}>
                                     <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                                        <KeyboardDateTimePicker
-                                            disableToolbar
-                                            variant="inline"
-                                            inputVariant="outlined"
+                                        <DateTimePicker
+                                            autoOk
+                                            ampm={false}
+                                            value={date}
+                                            onChange={handleChangeDate}
+                                            label={translations.date}
                                             format="dd/MM/yyyy HH:mm"
                                             margin="normal"
                                             fullWidth={true}
-                                            id="date-picker-inline"
-                                            label={translations.date}
-                                            value={date}
-                                            onChange={handleChangeDate}
-                                            KeyboardButtonProps={{
-                                                'aria-label': 'change date',
-                                            }}
+                                            disablePast
+                                            inputVariant="outlined"
+                                            error={errorEmptyDate}
                                         />
                                     </MuiPickersUtilsProvider>
                                 </Grid>
 
                                 <Grid container item xs={12} style={{marginTop: '25px'}}>
-                                    <Autocomplete
-                                        id="autocompleteEmployee"
-                                        options={employees}
-                                        getOptionLabel={option => option.name}
-                                        style={{ width: '100%' }}
-                                        autoHighlight
-                                        value={employee}
-                                        onChange={handleChangeEmployee}
-                                        renderOption={option => (
-                                            <React.Fragment>
-                                                {option.name} {option.surname}
-                                            </React.Fragment>
-                                        )}
-                                        renderInput={params => (
-                                            <TextField 
-                                                {...params} 
-                                                label={translations.technician}
-                                                variant="outlined" 
-                                                fullWidth  
-                                                inputProps={{
-                                                    ...params.inputProps,
-                                                    autoComplete: 'disabled', // disable autocomplete and autofill
-                                                }}
-                                            />
-                                        )}
-                                    />
+                                    <TextField
+										id="outlined-select-employee"
+										select
+										label={translations.technician}
+										value={employee}
+										onChange={handleChangeEmployee}
+										margin="normal"
+										variant="outlined"
+										fullWidth={true}
+										disabled={employees.length === 0}
+                                        error={errorEmptyEmployee}
+									>
+										<MenuItem key={0} value={null}>
+                                            {translations.neither}
+										</MenuItem>
+										{employees.map(employee => {
+											return(
+												<MenuItem key={employee.id} value={employee.id}>
+													{employee.name} {employee.surname}
+												</MenuItem>
+											)
+										})}
+									</TextField>
                                 </Grid>
 
                                 <Grid container item xs={12} style={{marginTop: '10px'}}>
-                                    <FormControl component="fieldset" style={{margin: '10px'}}>
+                                    <FormControl component="fieldset" style={{margin: '10px'}} error={errorEmptyType}>
                                         <FormLabel component="legend">{translations.typeOfService}</FormLabel>
                                         <FormGroup>
                                             <Grid container item xs={12}>
@@ -287,6 +326,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                 variant="outlined"
                                 fullWidth={true}
                                 onChange={handleChangeReason}
+                                error={errorEmptyReason}
                             />
                         </Grid>
 
@@ -331,7 +371,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                     <Button onClick={handleClose} color="primary">
                         {translations.cancel}
                     </Button>
-                    <Button onClick={handleSave} color="primary">
+                    <Button onClick={save} color="primary">
                         {translations.save}
                     </Button>
 				</DialogActions>
