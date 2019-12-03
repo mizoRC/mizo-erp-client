@@ -119,7 +119,7 @@ const Technician = ({tab, parts, handleOpen, loadingMore, onScrollYReachEnd}) =>
                             :
                                 <PartsMap 
                                     height={mapHeight}
-                                    parts
+                                    parts={parts}
                                 />
                         }
                     </div>
@@ -163,7 +163,7 @@ const Technician = ({tab, parts, handleOpen, loadingMore, onScrollYReachEnd}) =>
                         >
                             <PartsMap 
                                 height={(mapHeight - 40)}
-                                parts
+                                parts={parts}
                             />
                         </div>
                     </div>
