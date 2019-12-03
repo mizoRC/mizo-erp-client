@@ -1,8 +1,9 @@
 import React from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid, FormControl, FormLabel, FormGroup, FormControlLabel, Checkbox, RadioGroup, Radio, MenuItem, makeStyles } from '@material-ui/core';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid, FormControl, FormLabel, FormGroup, FormControlLabel, Checkbox, RadioGroup, Radio, MenuItem, CircularProgress } from '@material-ui/core';
 import DateFnsUtils from '@date-io/date-fns';
 import { MuiPickersUtilsProvider, DateTimePicker } from '@material-ui/pickers';
 import { v4 } from 'uuid';
+import { isMobile } from "react-device-detect";
 import { TranslatorContext } from '../../../contextProviders/Translator';
 
 const defaultServiceTypes = {
@@ -12,55 +13,23 @@ const defaultServiceTypes = {
     others: true
 }
 
-const useStyles = makeStyles(theme => ({
-    deleteButton: {
-        boxShadow: 'none',
-        color: "#FF3232",
-        '&:hover': {
-            backgroundColor: "rgb(255,50,50,0.1)",
-            borderColor: "rgb(255,50,50,0.1)",
-            color: "#FF3232",
-            boxShadow: 'none',
-        },
-        '&:active': {
-            boxShadow: 'none',
-        },
-        '&:focus': {
-            boxShadow: '0 0 0 0.2rem rgba(0,123,255,.5)',
-        }
-    }
-}))
-
-const PartModal = ({open, handleClose, handleSave, adding, updating, part, customers, employees}) => {
-    const classes = useStyles();
+const PartModal = ({open, handleClose, handleSave, adding, updating, part, customers, employees, isTechnician}) => {
 	const { translations } = React.useContext(TranslatorContext);
-    const [partId, setPartId] = React.useState();
-    const [customer, setCustomer] = React.useState();
-    const [address, setAddress] = React.useState();
-    const [employee, setEmployee] = React.useState();
-    const [date, setDate] = React.useState();
-    const [reason, setReason] = React.useState();
-    const [type, setType] = React.useState(defaultServiceTypes);
-    const [finished, setFinished] = React.useState(false);
-    const [notFinishedReason, setNotFinishedReason] = React.useState();
+    const [partId] = React.useState((!!part && !!part.partId) ? part.partId : v4());
+    const [customer, setCustomer] = React.useState((!!part && !!part.customerId) ? part.customerId : null);
+    const [address, setAddress] = React.useState((!!part && !!part.address) ? part.address : "");
+    const [employee, setEmployee] = React.useState((!!part && !!part.employeeId) ? part.employeeId : null);
+    const [date, setDate] = React.useState((!!part && !!part.date) ? (new Date((parseInt(part.date / 1000)) * 1000)) : (new Date()));
+    const [reason, setReason] = React.useState((!!part && !!part.reason) ? part.reason : null);
+    const [type, setType] = React.useState((!!part && !!part.type) ? part.type : defaultServiceTypes);
+    const [finished, setFinished] = React.useState(!!part.finished ? part.finished : false);
+    const [notFinishedReason, setNotFinishedReason] = React.useState((!!part && !!part.notFinishedReason) ? part.notFinishedReason : "");
     const [errorEmptyCustomer, setErrorEmptyCustomer] = React.useState(false);
     const [errorEmptyAddress, setErrorEmptyAddress] = React.useState(false);
     const [errorEmptyEmployee, setErrorEmptyEmployee] = React.useState(false);
     const [errorEmptyDate, setErrorEmptyDate] = React.useState(false);
     const [errorEmptyReason, setErrorEmptyReason] = React.useState(false);
     const [errorEmptyType, setErrorEmptyType] = React.useState(false);
-
-     React.useEffect(() => {
-        setPartId((!!part && !!part.partId) ? part.partId : v4());
-        setCustomer(part.customer);
-        setAddress((!!part.customer && !!part.customer.address) ? part.customer.address : "");
-        setEmployee(part.employee);
-        setDate(part.date);
-        setReason(part.reason);
-        setType((!!part && !!part.type) ? part.type : defaultServiceTypes);
-        setFinished(!!part.finished ? part.finished : false);
-        setNotFinishedReason(part.notFinishedReason);
-    }, [part]);
 
     const getCustomerAddressById = id => {
         let address = "";
@@ -130,9 +99,21 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
     const save = () => {
         const hasErrors = checkErrors();
 
-        if(!hasErrors){
-            //TO-DO SAVE
-            // handleSave();
+        if(!hasErrors && !!handleSave){
+            let partSave = {
+                partId: partId,
+                date: date,
+                address: address,
+                reason: reason,
+                type: type,
+                finished: finished,
+                notFinishedReason: notFinishedReason,
+                employeeId: employee,
+                customerId: customer
+            };
+            if(part.id) partSave.id = part.id;
+
+            handleSave(partSave);
         }
     }
 
@@ -152,7 +133,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
 				<DialogContent>
                     <Grid container spacing={1} style={{width: '100%', height: '100%'}}>
                         <Grid container spacing={1} item xs={12}>
-                            <Grid container item xs={6}>
+                            <Grid container item xs={isMobile ? 12 : 6}>
                                 <Grid container item xs={12}>
                                     <TextField
                                         margin="normal"
@@ -175,7 +156,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
 										variant="outlined"
 										fullWidth={true}
                                         error={errorEmptyCustomer}
-										disabled={customers.length === 0}
+										disabled={(customers.length === 0) || isTechnician}
 									>
 										<MenuItem key={0} value={null}>
                                             {translations.neither}
@@ -199,11 +180,12 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                         variant="outlined"
                                         onChange={handleChangeAddress}
                                         error={errorEmptyAddress}
+                                        disabled={isTechnician}
                                     />
                                 </Grid>
                             </Grid>
 
-                            <Grid container item xs={6}>
+                            <Grid container item xs={isMobile ? 12 : 6}>
                                 <Grid container item xs={12}>
                                     <MuiPickersUtilsProvider utils={DateFnsUtils}>
                                         <DateTimePicker
@@ -223,29 +205,31 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                 </Grid>
 
                                 <Grid container item xs={12} style={{marginTop: '25px'}}>
-                                    <TextField
-										id="outlined-select-employee"
-										select
-										label={translations.technician}
-										value={employee}
-										onChange={handleChangeEmployee}
-										margin="normal"
-										variant="outlined"
-										fullWidth={true}
-										disabled={employees.length === 0}
-                                        error={errorEmptyEmployee}
-									>
-										<MenuItem key={0} value={null}>
-                                            {translations.neither}
-										</MenuItem>
-										{employees.map(employee => {
-											return(
-												<MenuItem key={employee.id} value={employee.id}>
-													{employee.name} {employee.surname}
-												</MenuItem>
-											)
-										})}
-									</TextField>
+                                    {!isTechnician &&
+                                        <TextField
+                                            id="outlined-select-employee"
+                                            select
+                                            label={translations.technician}
+                                            value={employee}
+                                            onChange={handleChangeEmployee}
+                                            margin="normal"
+                                            variant="outlined"
+                                            fullWidth={true}
+                                            disabled={employees.length === 0}
+                                            error={errorEmptyEmployee}
+                                        >
+                                            <MenuItem key={0} value={null}>
+                                                {translations.neither}
+                                            </MenuItem>
+                                            {employees.map(employee => {
+                                                return(
+                                                    <MenuItem key={employee.id} value={employee.id}>
+                                                        {employee.name} {employee.surname}
+                                                    </MenuItem>
+                                                )
+                                            })}
+                                        </TextField>
+                                    }
                                 </Grid>
 
                                 <Grid container item xs={12} style={{marginTop: '10px'}}>
@@ -253,7 +237,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                         <FormLabel component="legend">{translations.typeOfService}</FormLabel>
                                         <FormGroup>
                                             <Grid container item xs={12}>
-                                                <Grid container item xs={6}>
+                                                <Grid container item xs={isMobile ? 12 : 6}>
                                                     <FormControlLabel
                                                         control={
                                                             <Checkbox 
@@ -267,7 +251,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                                     />
                                                 </Grid>
 
-                                                <Grid container item xs={6}>
+                                                <Grid container item xs={isMobile ? 12 : 6}>
                                                     <FormControlLabel
                                                         control={
                                                             <Checkbox 
@@ -281,7 +265,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                                     />
                                                 </Grid>
 
-                                                <Grid container item xs={6}>
+                                                <Grid container item xs={isMobile ? 12 : 6}>
                                                     <FormControlLabel
                                                         control={
                                                             <Checkbox 
@@ -295,7 +279,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                                     />
                                                 </Grid>
 
-                                                <Grid container item xs={6}>
+                                                <Grid container item xs={isMobile ? 12 : 6}>
                                                     <FormControlLabel
                                                         control={
                                                             <Checkbox 
@@ -327,11 +311,12 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                 fullWidth={true}
                                 onChange={handleChangeReason}
                                 error={errorEmptyReason}
+                                disabled={isTechnician}
                             />
                         </Grid>
 
                         <Grid container item xs={12}>
-                            <Grid container item xs={6} style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <Grid container item xs={isMobile ? 12 : 6} style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                                 <FormControl component="fieldset" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                                     <FormLabel component="legend">{translations.finishedAssistance}</FormLabel>
                                     <RadioGroup aria-label="finished" name="finished" onChange={handleChangeFinished} style={{flexDirection: 'row'}}>
@@ -351,7 +336,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                 </FormControl>
                             </Grid>
 
-                            <Grid container item xs={6}>
+                            <Grid container item xs={isMobile ? 12 : 6}>
                                 <TextField
                                     id="multiline-clarification"
                                     label={translations.technicianClarifications}
@@ -368,11 +353,25 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                     </Grid>
 				</DialogContent>
 				<DialogActions>
-                    <Button onClick={handleClose} color="primary">
+                    <Button onClick={handleClose} disabled={(adding || updating)} color="primary">
                         {translations.cancel}
                     </Button>
-                    <Button onClick={save} color="primary">
-                        {translations.save}
+                    <Button onClick={save} disabled={(adding || updating)} color="primary">
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection:' row',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            {translations.save}
+                            {(adding || updating) &&
+                                <div style={{marginLeft: '6px', display: 'flex', alignItems: 'center'}}>
+                                    <CircularProgress size={20} color="secondary" />
+                                </div>
+                            }
+                        </div>
                     </Button>
 				</DialogActions>
 			</Dialog>
