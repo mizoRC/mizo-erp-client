@@ -1,7 +1,7 @@
 import React from 'react';
-import { makeStyles } from "@material-ui/core";
+import { makeStyles, BottomNavigation, BottomNavigationAction } from "@material-ui/core";
 import { gql } from "apollo-boost";
-import { useQuery } from "@apollo/react-hooks";
+import { useQuery, useMutation } from "@apollo/react-hooks";
 import jwt_decode from 'jwt-decode';
 import { isMobile } from "react-device-detect";
 import { TranslatorContext } from "../../../contextProviders/Translator";
@@ -42,7 +42,12 @@ const PARTS = gql`
                 date
                 address
                 reason
-                type
+                type {
+                    mounting
+                    maintenance
+                    repair
+                    others
+                }
                 finished
                 notFinishedReason
                 employeeId
@@ -63,6 +68,24 @@ const PARTS = gql`
 	}
 `;
 
+const ADD_PART = gql`
+    mutation addPart($part: PartInput!) {
+        addPart(part: $part) {
+            id
+            partId
+        }
+    }
+`;
+
+const UPDATE_PART = gql`
+    mutation updatePart($part: PartInputUpdate!) {
+        updatePart(part: $part) {
+            id
+            partId
+        }
+    }
+`;
+
 const CUSTOMERS = gql`
     query customers {
         customers {
@@ -75,9 +98,9 @@ const CUSTOMERS = gql`
     }
 `;
 
-const EMPLOYEES = gql`
-    query employees {
-        employees {
+const TECHNICIANS = gql`
+    query technicians {
+        technicians {
             id
             name
             surname
@@ -96,16 +119,28 @@ const SAT = () => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
     const [filters, setFilters] = React.useState(defaultFilters);
+    const [part, setPart] = React.useState({});
     const [openModal, setOpenModal] = React.useState(false);
+    const [tab, setTab] = React.useState('parts');
     const [loadingMore, setLoadingMore] = React.useState(false);
     const { loading, data, refetch, fetchMore } = useQuery(PARTS, {
 		fetchPolicy: "network-only",
 		variables: filters
 	});
+    const [ addPart, {loading: addingPart} ] = useMutation(ADD_PART, {
+        refetchQueries: [{query: PARTS, variables: filters}],
+        awaitRefetchQueries: true
+    });
+    const [ updatePart, {loading: updatingPart} ] = useMutation(UPDATE_PART, {
+        refetchQueries: [{query: PARTS, variables: filters}],
+        awaitRefetchQueries: true
+    });
     const { loading: loadingCustomers, data: dataCustomers } = useQuery(CUSTOMERS);
-    const { loading: loadingEmployees, data: dataEmployees } = useQuery(EMPLOYEES);
+    const { loading: loadingTechnicians, data: dataTechnicians } = useQuery(TECHNICIANS);
 
-    const handleOpenModal = () => {
+    const handleOpen = part => {
+        const {__typename, ...selectedPart} = part;
+        setPart(selectedPart);
         setOpenModal(true);
     }
 
@@ -113,8 +148,19 @@ const SAT = () => {
         setOpenModal(false);
     }
 
-    const handleOpen = () => {
-
+    const handleSave = async part => {
+        if(!!part.id){
+            const {__typename, ...partType} = part.type;
+            const partToUpdate = {
+                ...part,
+                type: partType
+            }
+            await updatePart({variables:{part:partToUpdate}});
+        }
+        else{
+            await addPart({variables:{part:part}});
+        }
+        setOpenModal(false);
     }
 
     const handleChangeFilters = newFilters => {
@@ -172,7 +218,7 @@ const SAT = () => {
                     height={100}
                     handleChangeFilters={handleChangeFilters}
                     loading={loading}
-                    handleAdd={(employee.role !== ROLES.TECHNICIAN) ? handleOpenModal : null}
+                    handleAdd={(employee.role !== ROLES.TECHNICIAN) ? handleOpen : null}
                 />
 
                 <div
@@ -196,7 +242,7 @@ const SAT = () => {
 
                 <div
                     style={{
-                        height: isMobile ? "calc(100% - 180px)"  : "calc(100% - 150px)",
+                        height: isMobile ? "calc(100% - 240px)"  : "calc(100% - 150px)",
                         width: "calc(100% - 20px)",
                         display: "flex",
                         padding: "10px",
@@ -204,7 +250,7 @@ const SAT = () => {
                         borderRadius: "6px"
                     }}
                 >
-                    {(loading || loadingCustomers || loadingEmployees) ?
+                    {(loading || loadingCustomers || loadingTechnicians) ?
 							<div
 								style={{
 									display: "flex",
@@ -225,6 +271,7 @@ const SAT = () => {
                                         />           
                                     :
                                         <Technician 
+                                            tab={tab}
                                             parts={data.parts.rows}
                                             handleOpen={handleOpen}
                                             loadingMore={loadingMore}
@@ -234,34 +281,42 @@ const SAT = () => {
                             </React.Fragment>
                     }
                 </div>
+
+                {isMobile &&
+                    <BottomNavigation
+                        value={tab}
+                        onChange={(event, newValue) => {
+                            setTab(newValue);
+                        }}
+                        showLabels
+                        style={{
+                            position: 'absolute',
+                            bottom: '0px',
+                            right: '0px',
+                            left: '0px'
+                        }}
+                    >
+                        <BottomNavigationAction label={translations.parts} value="parts" icon={<i className="fas fa-tasks"></i>} />
+                        <BottomNavigationAction label={translations.map} value="map" icon={<i className="fas fa-map-marked-alt"></i>} />
+                    </BottomNavigation>
+                }
             </div>
 
             {openModal &&
                 <PartModal 
                     open={openModal}
                     handleClose={handleCloseModal}
-                    handleSave={handleCloseModal}
+                    handleSave={handleSave}
                     adding={false}
                     updating={false}
-                    part={{}}
+                    part={part}
                     customers={dataCustomers.customers}
-                    employees={dataEmployees.employees}
+                    employees={dataTechnicians.technicians}
+                    isTechnician={employee.role === ROLES.TECHNICIAN}
                 />
             }
         </div>
     )
 }
-
-/* 
-    <div>
-        SAT
-        <Map
-            googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_3n9LwBnYiF_Flak6JKB7FkbtjL0KHH8&v=3.exp&libraries=geometry,drawing,places"
-            loadingElement={<div style={{ height: `100%` }} />}
-            containerElement={<div style={{ height: `400px` }} />}
-            mapElement={<div style={{ height: `100%` }} />}
-        />
-    </div>
-*/
 
 export default SAT;
