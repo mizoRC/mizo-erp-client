@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Grid, TextField, Button } from '@material-ui/core';
+import { Paper, Grid, TextField, Button, IconButton, Tooltip } from '@material-ui/core';
 import DateFnsUtils from '@date-io/date-fns';
 import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
 import { BrowserView, MobileView, isMobile } from "react-device-detect";
@@ -23,6 +23,15 @@ const ActionsBar = ({height, handleChangeFilters: handleChangeFiltersParent, han
     const handleChangeDate = date => {
         setDate(date);
     };
+
+    const handleAddNewPart = () => {
+        handleAdd({});
+    }
+
+    const clearFilters = () => {
+        setText('');
+        setDate();
+    }
 
     const buildFilterVariables = () => {
         let filters = {
@@ -76,7 +85,7 @@ const ActionsBar = ({height, handleChangeFilters: handleChangeFiltersParent, han
                 }}
             >
                 <Grid container spacing={2} style={{width: '100%', height: '100%'}}>
-                    <Grid item xs={12} sm={!!handleAdd ? 6 : 8} style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Grid item xs={12} sm={6} style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                         <TextField
                             id="outlined-search"
                             label={translations.search}
@@ -88,7 +97,7 @@ const ActionsBar = ({height, handleChangeFilters: handleChangeFiltersParent, han
                         />
                     </Grid>
 
-                    <Grid item xs={12} sm={4} style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+                    <Grid item xs={10} sm={4} style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
                         <MuiPickersUtilsProvider utils={DateFnsUtils}>
                             <KeyboardDatePicker
                                 disableToolbar
@@ -107,13 +116,19 @@ const ActionsBar = ({height, handleChangeFilters: handleChangeFiltersParent, han
                         </MuiPickersUtilsProvider>
                     </Grid>
 
-                    {!!handleAdd &&
-                        <Grid item xs={12} sm={2} style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                            <Button variant="contained" color="primary" onClick={handleAdd}>
+                    <Grid item xs={12} sm={2} style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+                        <Tooltip title={translations.cleanFilters}>
+                            <IconButton color="primary" aria-label="clean" onClick={clearFilters} style={{marginRight: '20px'}}>
+                                <i className="fas fa-eraser"></i>
+                            </IconButton>
+                        </Tooltip>
+
+                        {!!handleAdd &&
+                            <Button variant="contained" color="primary" onClick={handleAddNewPart}>
                                 {translations.add}
                             </Button>
-                        </Grid>
-                    }
+                        }
+                    </Grid>
                 </Grid>
             </BrowserView>
 
@@ -138,7 +153,7 @@ const ActionsBar = ({height, handleChangeFilters: handleChangeFiltersParent, han
                         />
                     </Grid>
 
-                    <Grid item xs={12} style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+                    <Grid item xs={10} style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
                         <MuiPickersUtilsProvider utils={DateFnsUtils}>
                             <KeyboardDatePicker
                                 disableToolbar
@@ -155,6 +170,14 @@ const ActionsBar = ({height, handleChangeFilters: handleChangeFiltersParent, han
                                 }}
                             />
                         </MuiPickersUtilsProvider>
+                    </Grid>
+
+                     <Grid item xs={2} style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
+                        <Tooltip title={translations.cleanFilters}>
+                            <IconButton color="primary" aria-label="clean" onClick={clearFilters} style={{marginRight: '20px'}}>
+                                <i className="fas fa-eraser"></i>
+                            </IconButton>
+                        </Tooltip>
                     </Grid>
                 </Grid>
             </MobileView>
