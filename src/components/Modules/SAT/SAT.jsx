@@ -13,7 +13,6 @@ import ActionsBar from "./ActionsBar";
 import ManagerSeller from './Manager';
 import Technician from './Technician';
 import PartModal from './PartModal';
-//import Map from '../../Segments/Map';
 const limit = 16;
 
 const defaultFilters = {
@@ -307,8 +306,8 @@ const SAT = () => {
                     open={openModal}
                     handleClose={handleCloseModal}
                     handleSave={handleSave}
-                    adding={false}
-                    updating={false}
+                    adding={addingPart}
+                    updating={updatingPart}
                     part={part}
                     customers={dataCustomers.customers}
                     employees={dataTechnicians.technicians}
