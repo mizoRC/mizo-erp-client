@@ -4,6 +4,7 @@ import PerfectScrollbar from "react-perfect-scrollbar";
 import { TranslatorContext } from "../../../contextProviders/Translator";
 import { formatDate } from '../../../utils/format';
 import loadingWhiteSVG from "../../../assets/loading_white.svg";
+import { primary } from '../../../styles/colors';
 
 const Manager = ({parts, handleOpen, loadingMore, onScrollYReachEnd}) => {
     const { translations } = React.useContext(TranslatorContext);
@@ -36,6 +37,11 @@ const Manager = ({parts, handleOpen, loadingMore, onScrollYReachEnd}) => {
                         >
                             {translations.reason}
                         </TableCell>
+                        <TableCell
+                            align="center"
+                        >
+                            {translations.finishedAssistance}
+                        </TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -58,6 +64,11 @@ const Manager = ({parts, handleOpen, loadingMore, onScrollYReachEnd}) => {
                             </TableCell>
                             <TableCell align="center">
                                 {part.reason}
+                            </TableCell>
+                            <TableCell align="center">
+                                {part.finished &&
+                                    <i className="fas fa-check" style={{color: primary}}></i>
+                                }
                             </TableCell>
                         </TableRow>
                     ))}
