@@ -5,6 +5,7 @@ import { withRouter } from 'react-router-dom';
 import { useQuery } from '@apollo/react-hooks';
 import { TranslatorContext } from '../contextProviders/Translator';
 import useDisplayBreakpoints from '../contextProviders/useDisplayBreakpoints';
+import { ROLES } from '../constants';
 import * as mainStyles from '../styles';
 import Bar from './Segments/Bar';
 import Loading  from './Segments/Loading';
@@ -131,30 +132,53 @@ const Dashboard = ({history}) => {
                                 justifyContent: 'center'
                             }}
                         >
-                            <Grid container spacing={3} style={{maxWidth: '800px', maxHeight: 'calc(100% - 120px)', overflow: 'auto'}}>
-                                <Grid className={classes.centered} item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.employees} img={employeesIcon} action={() => {goToModule(`/employees/${data.me.company.id}`)}}/>
-                                </Grid>
+                            <Grid 
+                                container 
+                                spacing={3} 
+                                style={{
+                                    maxWidth: '800px', 
+                                    maxHeight: 'calc(100% - 120px)', 
+                                    overflow: 'auto',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                {(data.me.role === ROLES.MANAGER) &&
+                                    <Grid className={classes.centered} item xs={12} sm={6} md={4}>
+                                        <GridCard title={translations.employees} img={employeesIcon} action={() => {goToModule(`/employees/${data.me.company.id}`)}}/>
+                                    </Grid>
+                                }
 
-                                <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.crm} img={crmIcon} action={() => {goToModule(`/crm/${data.me.company.id}`)}}/>
-                                </Grid>
+                                {((data.me.role === ROLES.MANAGER) || (data.me.role === ROLES.SELLER)) &&
+                                    <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
+                                        <GridCard title={translations.crm} img={crmIcon} action={() => {goToModule(`/crm/${data.me.company.id}`)}}/>
+                                    </Grid>
+                                }
 
-                                <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.products} img={productsIcon} action={() => {goToModule(`/products/${data.me.company.id}`)}}/>
-                                </Grid>
+                                {((data.me.role === ROLES.MANAGER) || (data.me.role === ROLES.SELLER)) &&
+                                    <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
+                                        <GridCard title={translations.products} img={productsIcon} action={() => {goToModule(`/products/${data.me.company.id}`)}}/>
+                                    </Grid>
+                                }
 
-                                <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.accounting} img={accountingIcon} action={() => {goToModule(`/accounting/${data.me.company.id}`)}}/>
-                                </Grid>
+                                {(data.me.role === ROLES.MANAGER) &&
+                                    <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
+                                        <GridCard title={translations.accounting} img={accountingIcon} action={() => {goToModule(`/accounting/${data.me.company.id}`)}}/>
+                                    </Grid>
+                                }
 
-                                <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.pos} img={posIcon} action={() => {goToModule(`/pos/${data.me.id}`)}}/>
-                                </Grid>
+                                {((data.me.role === ROLES.MANAGER) || (data.me.role === ROLES.SELLER)) &&
+                                    <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
+                                        <GridCard title={translations.pos} img={posIcon} action={() => {goToModule(`/pos/${data.me.id}`)}}/>
+                                    </Grid>
+                                }
 
-                                <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
-                                    <GridCard title={translations.sat} img={satIcon} action={() => {goToModule(`/sat/${data.me.company.id}`)}}/>
-                                </Grid>
+                                {((data.me.role === ROLES.MANAGER) || (data.me.role === ROLES.TECHNICIAN)) &&
+                                    <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
+                                        <GridCard title={translations.sat} img={satIcon} action={() => {goToModule(`/sat/${data.me.company.id}`)}}/>
+                                    </Grid>
+                                }
                             </Grid>
                         </div>
                     </>
