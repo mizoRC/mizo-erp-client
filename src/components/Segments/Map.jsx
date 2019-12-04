@@ -1,16 +1,20 @@
 import React from 'react';
 import { withGoogleMap, GoogleMap, Marker, InfoWindow } from "react-google-maps";
-import { locationIcon } from '../../assets/locationB64';
-let currentPositionIntervalID;
+import { locationIcon, markerIcon, markerDoneIcon } from '../../assets/locationB64';
+import { TranslatorContext } from '../../contextProviders/Translator';
+// let currentPositionIntervalID;
 
 const Map = ({markers}) => {
+    const { translations } = React.useContext(TranslatorContext);
     const map = React.useRef();
     const [opened, setOpened] = React.useState();
     const [position, setPosition] = React.useState();
+    const [openedPosition, setOpenedPosition] = React.useState(false);
 
     const toggleOpen = index => {
         if(opened !== index){
             setOpened(index);
+            setOpenedPosition(false);
         }
         else{
             setOpened();
@@ -23,6 +27,8 @@ const Map = ({markers}) => {
         markers.forEach(marker => {
             bounds.extend(marker.position);
         });
+
+        if(position) bounds.extend(position);
 
         map.current.fitBounds(bounds);
     }
@@ -41,17 +47,23 @@ const Map = ({markers}) => {
         }
     }
 
+    const toggleOpenPosition = () => {
+        if(!openedPosition) setOpened();
+        setOpenedPosition(!openedPosition);
+    }
+
     React.useEffect(() => {
-        currentPositionIntervalID = setInterval(() => {
+        getGeoLocation();
+        /* currentPositionIntervalID = setInterval(() => {
             getGeoLocation();
         }, 1000);
 
-        return () => clearInterval(currentPositionIntervalID);
-    },[])
+        return () => clearInterval(currentPositionIntervalID); */
+    },[map])
 
     React.useEffect(() => {
         if(!!map.current) getCenter();
-    },[map, markers]);
+    },[map, markers, position]);
 
     return(
         <GoogleMap
@@ -60,26 +72,56 @@ const Map = ({markers}) => {
         >
             {markers.map((marker, index) => (
                 <Marker
+                    key={index}
                     position={marker.position}
                     onClick={() => {toggleOpen(index)}}
+                    icon={{ 
+                        url: marker.finished ? markerDoneIcon : markerIcon, 
+                        scaledSize: { width: 32, height: 32 } 
+                    }}
                 >
                     {(opened === index) && 
                         <InfoWindow onCloseClick={() => {toggleOpen(index)}}>
-                            <div>{marker.label}</div>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexDirection: 'column'
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        fontSize: '18px',
+                                        marginBottom: '10px'
+                                    }}
+                                >
+                                    {marker.labelCustomer}
+                                </div>
+                                <div
+                                    style={{
+                                        fontSize: '13px'
+                                    }}
+                                >
+                                    {marker.labelReason}
+                                </div>
+                            </div>
                         </InfoWindow>
                     }
                 </Marker>
             ))}
 
-            {/* <Marker
-                position={position}
-                icon={locationIcon}
-            ></Marker> */}
-
             <Marker
                 position={position}
                 icon={{ url: locationIcon, scaledSize: { width: 32, height: 32 } }}
-            ></Marker>
+                onClick={toggleOpenPosition}
+            >
+                {openedPosition && 
+                    <InfoWindow onCloseClick={toggleOpenPosition}>
+                        <div>{translations.currentLocation}</div>
+                    </InfoWindow>
+                }
+            </Marker>
         </GoogleMap>
     )
 }
