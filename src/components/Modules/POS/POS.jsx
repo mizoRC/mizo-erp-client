@@ -187,6 +187,7 @@ const POS = () => {
         setLines([]);
         setTotal(0);
         setTotalTaxes(0);
+        setCustomer();
         setOpenPayment(false);
     }
 
