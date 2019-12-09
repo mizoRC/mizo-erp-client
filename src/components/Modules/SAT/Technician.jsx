@@ -7,6 +7,7 @@ import { formatDate } from '../../../utils/format';
 import loadingWhiteSVG from "../../../assets/loading_white.svg";
 import PartsMap from './PartsMap';
 import { primary } from '../../../styles/colors';
+import NotFound from '../../Segments/NotFound';
 
 
 const PartsList = ({parts, distances, onScrollYReachEnd, translations, handleOpen, loadingMore}) => {
@@ -18,94 +19,100 @@ const PartsList = ({parts, distances, onScrollYReachEnd, translations, handleOpe
     }
 
     return (
-        <PerfectScrollbar
-            onYReachEnd={onScrollYReachEnd}
-            style={{ width: "100%" }}
-            options={{
-                suppressScrollX: true
-            }}
-        >
-            <Table stickyHeader aria-label="sticky table">
-                <TableHead>
-                    <TableRow>
-                        <TableCell
-                            align="center"
-                        >
-                            {translations.customer}
-                        </TableCell>
-                        {!isMobile &&
-                            <TableCell
-                                align="center"
-                            >
-                                {translations.date}
-                            </TableCell>
-                        }
-                        <TableCell
-                            align="center"
-                        >
-                            {translations.reason}
-                        </TableCell>
-                        <TableCell
-                            align="center"
-                        >
-                            KM
-                        </TableCell>
-                        <TableCell
-                            align="center"
-                        >
-                            <i className="fas fa-clipboard-check"></i>
-                        </TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {renderParts.map(part => (
-                        <TableRow
-                            hover
-                            role="checkbox"
-                            tabIndex={-1}
-                            key={part.id}
-                            onClick={() => {handleOpen(part)}}
-                        >
-                            <TableCell align="center">
-                                {part.customer.name}
-                            </TableCell>
-                            {!isMobile &&
-                                <TableCell align="center">
-                                    {formatDate(part.date)}
-                                </TableCell>
-                            }
-                            <TableCell align="center">
-                                {part.reason}
-                            </TableCell>
-                            <TableCell align="center">
-                                {part.distance}
-                            </TableCell>
-                            <TableCell align="center">
-                                    {part.finished &&
-                                        <i className="fas fa-check" style={{color: primary}}></i>
+        <React.Fragment>
+            {(renderParts.length > 0) ?
+                    <PerfectScrollbar
+                        onYReachEnd={onScrollYReachEnd}
+                        style={{ width: "100%" }}
+                        options={{
+                            suppressScrollX: true
+                        }}
+                    >
+                        <Table stickyHeader aria-label="sticky table">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell
+                                        align="center"
+                                    >
+                                        {translations.customer}
+                                    </TableCell>
+                                    {!isMobile &&
+                                        <TableCell
+                                            align="center"
+                                        >
+                                            {translations.date}
+                                        </TableCell>
                                     }
-                                </TableCell>
-                        </TableRow>
-                    ))}
-                    {loadingMore && (
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginTop: "5px"
-                            }}
-                        >
-                            <img
-                                src={loadingWhiteSVG}
-                                alt="loadingIcon"
-                                style={{ maxWidth: "80px" }}
-                            />
-                        </div>
-                    )}
-                </TableBody>
-            </Table>
-        </PerfectScrollbar>
+                                    <TableCell
+                                        align="center"
+                                    >
+                                        {translations.reason}
+                                    </TableCell>
+                                    <TableCell
+                                        align="center"
+                                    >
+                                        KM
+                                    </TableCell>
+                                    <TableCell
+                                        align="center"
+                                    >
+                                        <i className="fas fa-clipboard-check"></i>
+                                    </TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {renderParts.map(part => (
+                                    <TableRow
+                                        hover
+                                        role="checkbox"
+                                        tabIndex={-1}
+                                        key={part.id}
+                                        onClick={() => {handleOpen(part)}}
+                                    >
+                                        <TableCell align="center">
+                                            {part.customer.name}
+                                        </TableCell>
+                                        {!isMobile &&
+                                            <TableCell align="center">
+                                                {formatDate(part.date)}
+                                            </TableCell>
+                                        }
+                                        <TableCell align="center">
+                                            {part.reason}
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            {part.distance}
+                                        </TableCell>
+                                        <TableCell align="center">
+                                                {part.finished &&
+                                                    <i className="fas fa-check" style={{color: primary}}></i>
+                                                }
+                                            </TableCell>
+                                    </TableRow>
+                                ))}
+                                {loadingMore && (
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            marginTop: "5px"
+                                        }}
+                                    >
+                                        <img
+                                            src={loadingWhiteSVG}
+                                            alt="loadingIcon"
+                                            style={{ maxWidth: "80px" }}
+                                        />
+                                    </div>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </PerfectScrollbar>
+                :
+                    <NotFound />
+            }
+        </React.Fragment>
     )
 }
 
