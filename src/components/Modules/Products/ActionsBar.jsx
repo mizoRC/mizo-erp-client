@@ -5,7 +5,7 @@ const defaultLimit = 16;
 const initialOffset = 0;
 let filtersTimeout;
 
-const ActionsBar = ({height, add, addCategory, categories, handleChangeFilters: handleChangeFiltersParent, loading}) => {
+const ActionsBar = ({height, add, addCategory, categories, handleChangeFilters: handleChangeFiltersParent, importProducts}) => {
     const { translations } = React.useContext(TranslatorContext);
     const [text, setText] = React.useState('');
     const [category, setCategory] = React.useState();
@@ -80,9 +80,9 @@ const ActionsBar = ({height, add, addCategory, categories, handleChangeFilters: 
                             {translations.add}
                         </Button>
 
-                        {/* <Button variant="contained" color="secondary">
+                        <Button variant="contained" color="secondary" onClick={importProducts}>
                             {translations.import}
-                        </Button> */}
+                        </Button>
                     </div>
                 </Grid>
 

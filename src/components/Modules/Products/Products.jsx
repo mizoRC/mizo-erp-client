@@ -7,10 +7,12 @@ import { TranslatorContext } from '../../../contextProviders/Translator';
 import * as mainStyles from '../../../styles';
 import Bar from '../../Segments/Bar';
 import Loading from '../../Segments/Loading';
+import NotFound from '../../Segments/NotFound';
 import ActionsBar from './ActionsBar';
 import ProductCard from './ProductCard';
 import ProductModal from './ProductModal';
 import AddCategoryModal from './AddCategoryModal';
+import ImportModal from './ImportModal';
 import loadingWhiteSVG from '../../../assets/loading_white.svg';
 const limit = 16;
 
@@ -94,10 +96,17 @@ const ADD_CATEGORY = gql`
     }
 `;
 
+const IMPORT_PRODUCTS = gql`
+    mutation excelImport($products: [ProductInput]!) {
+        excelImport(products: $products)
+    }
+`;
+
 const Products = () => {
     const classes = useStyles();
     const { translations } = React.useContext(TranslatorContext);
     const [open, setOpen] = React.useState(false);
+    const [openImport, setOpenImport] = React.useState(false);
     const [openCategory, setOpenCategory] = React.useState(false);
     const [product, setProduct] = React.useState({});
     const [filters, setFilters] = React.useState(defaultFilters);
@@ -123,6 +132,10 @@ const Products = () => {
     });
     const [ addCategory, {loading: savingCategory} ] = useMutation(ADD_CATEGORY, {
         refetchQueries: [{query: CATEGORIES}],
+        awaitRefetchQueries: true
+    });
+    const [ importProducts, {loading: importing} ] = useMutation(IMPORT_PRODUCTS, {
+        refetchQueries: [{query: PRODUCTS, variables: filters}],
         awaitRefetchQueries: true
     });
 
@@ -162,6 +175,19 @@ const Products = () => {
     const handleSaveCategory = async(newCategory) => {
         await addCategory({variables:{category:{name: newCategory}}});
         setOpenCategory(false);
+    }
+
+    const handleOpenImport = () => {
+        setOpenImport(true);
+    }
+
+    const handleCloseImport = () => {
+        setOpenImport(false);
+    }
+
+    const handleImport = async(rows) => {
+        await importProducts({variables:{products:rows}});
+        setOpenImport(false);
     }
 
     const handleChangeFilters = (newFilters) => {
@@ -230,6 +256,7 @@ const Products = () => {
                         height={100} 
                         add={handleOpen} 
                         addCategory={handleOpenCategory} 
+                        importProducts={handleOpenImport}
                         categories={(!!dataCategories && !!dataCategories.categories) ? dataCategories.categories : []}
                         handleChangeFilters={handleChangeFilters}
                         loading={loading}
@@ -271,27 +298,33 @@ const Products = () => {
                                     <Loading />
                                 </div>
                             :
-                                <PerfectScrollbar onYReachEnd={onScrollYReachEnd} style={{width: '100%'}}>
-                                    <Grid container spacing={1} style={{margin: '0px', width: '100%'}}>
-                                        {data.products.rows.map(product => (
-                                            <Grid key={product.id} item xs={12} sm={6} md={4} lg={3}>
-                                                <ProductCard product={product} action={handleOpen}/>
-                                            </Grid>
-                                        ))}
-                                    </Grid>
-                                    {loadingMore && 
-                                        <div
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                marginTop: '5px'
-                                            }}
-                                        >
-                                            <img src={loadingWhiteSVG} alt="loadingIcon" style={{maxWidth: "80px"}}/>
-                                        </div>
+                                <React.Fragment>
+                                    {(data.products.rows.length > 0) ?
+                                            <PerfectScrollbar onYReachEnd={onScrollYReachEnd} style={{width: '100%'}}>
+                                                <Grid container spacing={1} style={{margin: '0px', width: '100%'}}>
+                                                    {data.products.rows.map(product => (
+                                                        <Grid key={product.id} item xs={12} sm={6} md={4} lg={3}>
+                                                            <ProductCard product={product} action={handleOpen}/>
+                                                        </Grid>
+                                                    ))}
+                                                </Grid>
+                                                {loadingMore && 
+                                                    <div
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            marginTop: '5px'
+                                                        }}
+                                                    >
+                                                        <img src={loadingWhiteSVG} alt="loadingIcon" style={{maxWidth: "80px"}}/>
+                                                    </div>
+                                                }
+                                            </PerfectScrollbar>
+                                        :
+                                            <NotFound />
                                     }
-                                </PerfectScrollbar>
+                                </React.Fragment>
                         }
                     </div>
                 </div>
@@ -311,12 +344,23 @@ const Products = () => {
                 />
             }
 
-            <AddCategoryModal
-                open={openCategory} 
-                handleClose={handleCloseCategory} 
-                handleSave={handleSaveCategory}
-                saving={savingCategory}
-            />
+            {openImport &&
+                <ImportModal 
+                    open={openImport} 
+                    handleClose={handleCloseImport} 
+                    handleImport={handleImport}
+                    importing={importing}
+                />
+            }
+
+            {openCategory &&
+                <AddCategoryModal
+                    open={openCategory} 
+                    handleClose={handleCloseCategory} 
+                    handleSave={handleSaveCategory}
+                    saving={savingCategory}
+                />
+            }
         </div>
     )
 }
