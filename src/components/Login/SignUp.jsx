@@ -89,7 +89,7 @@ const Register = ({history}) => {
 
     const handleChangeEmail = event => {
         const newEmail = event.target.value;
-        const isValidEmail = (/^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[A-Za-z]+$/.test(newEmail));
+        const isValidEmail = (/^[_a-z0-9-]+(\.[_a-z0-9-]+)*(\+[a-z0-9-]+)?@[a-zA-Z0-9]+\.[A-Za-z]+$/.test(newEmail));
         setValidEmail(isValidEmail);
         setEmail(newEmail);
     };
