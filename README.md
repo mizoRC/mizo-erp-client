@@ -11,6 +11,8 @@ Este proyecto es la parte de cliente desarrollada en React JS.
 - Instalamos las librerías del proyecto ejecutando `yarn install` en la raíz del proyecto.
 - Creamos un archivo .env en la raíz del proyecto con las variables necesarias:    
     - REACT_APP_API_URL=<backend_graphql_url>
+    - REACT_APP_WS_API_URL=<backend_graphql_subscriptions_websocket_url>
+    - REACT_APP_API_EXPRESS_URL=<backend_express_url>
     - REACT_APP_GOOGLE_MAPS_APIKEY=<tu_apikey_de_google_maps_api>
 - Por último ejecutamos el proyecto con `yarn start` en la raíz del proyecto.
 
