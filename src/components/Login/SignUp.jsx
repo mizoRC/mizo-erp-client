@@ -3,7 +3,7 @@ import { Paper, FormControl, InputLabel, Select, Grid, Button, Input, InputAdorn
 import { useApolloClient } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import jwt_decode from 'jwt-decode';
-import { withRouter } from 'react-router-dom';
+import { withRouter, Link } from 'react-router-dom';
 import { execute } from '../../utils/graphql';
 import { TranslatorContext } from '../../contextProviders/Translator';
 import useDisplayBreakpoints from '../../contextProviders/useDisplayBreakpoints';
@@ -242,7 +242,9 @@ const Register = ({history}) => {
                         justifyContent: 'center'
                     }}
                 >
-                    <img alt="mizo-erp-logo-complete" src={logoComplete} style={{maxWidth: '200px'}} />
+                    <Link to="/" className="link">
+                        <img alt="mizo-erp-logo-complete" src={logoComplete} style={{maxWidth: '200px'}} />
+                    </Link>
                 </div>
 
                 <div
