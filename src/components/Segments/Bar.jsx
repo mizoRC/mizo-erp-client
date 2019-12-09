@@ -107,7 +107,8 @@ const Bar = ({history, transparent}) => {
                     </Hidden>
                     
                     <Hidden only="xs">
-                        <img alt="logo_complete" src={logoComplete} style={{maxHeight: '40px'}} onClick={goToDashboard}/>
+                        <img alt="logo_complete" src={`${process.env.REACT_APP_API_EXPRESS_URL}/logo/get/${me.id}`} style={{maxHeight: '40px'}} onClick={goToDashboard}/>
+                        {/* <img alt="logo_complete" src={logoComplete} style={{maxHeight: '40px'}} onClick={goToDashboard}/> */}
                     </Hidden>
                 </div>
 
