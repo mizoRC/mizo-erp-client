@@ -11,7 +11,7 @@ let filtersTimeout;
 const ActionsBar = ({height, handleChangeFilters: handleChangeFiltersParent, loading}) => {
     const { translations } = React.useContext(TranslatorContext);
     const [text, setText] = React.useState('');
-    const [date, setDate] = React.useState();
+    const [date, setDate] = React.useState(new Date());
     const [offset] = React.useState(initialOffset);
     const [limit] = React.useState(defaultLimit);
 
