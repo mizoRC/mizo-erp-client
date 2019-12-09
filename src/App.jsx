@@ -1,6 +1,9 @@
 import React from "react";
 import {ApolloClient, ApolloLink, InMemoryCache, HttpLink} from "apollo-boost";
 import { ApolloProvider } from '@apollo/react-hooks';
+import { WebSocketLink } from 'apollo-link-ws';
+import { split } from 'apollo-link';
+import { getMainDefinition } from 'apollo-utilities';
 import { onError } from 'apollo-link-error';
 import { BrowserRouter } from "react-router-dom";
 import { createBrowserHistory } from "history";
@@ -30,6 +33,13 @@ const authLink = new ApolloLink((operation, forward) => {
 
 	// Call the next link in the middleware chain.
 	return forward(operation);
+});
+
+const wsLink = new WebSocketLink({
+  uri: process.env.REACT_APP_WS_API_URL,
+  options: {
+    reconnect: true
+  }
 });
 
 const printSessionExpiredError = () => {
@@ -64,8 +74,21 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, response, f
     }
 });
 
+const link = split(
+  // split based on operation type
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === 'OperationDefinition' &&
+      definition.operation === 'subscription'
+    );
+  },
+  wsLink,
+  httpLink
+);
+
 const client = new ApolloClient({
-	link: ApolloLink.from([errorLink, authLink, httpLink]),
+	link: ApolloLink.from([errorLink, authLink, link]),
     cache: new InMemoryCache()
 });
 
