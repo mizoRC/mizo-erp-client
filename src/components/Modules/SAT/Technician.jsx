@@ -1,6 +1,9 @@
 import React from 'react';
 import { isMobile } from "react-device-detect";
 import { Table, TableHead, TableBody, TableRow, TableCell } from "@material-ui/core";
+import jwt_decode from 'jwt-decode';
+import { gql } from "apollo-boost";
+import { useSubscription } from "@apollo/react-hooks";
 import PerfectScrollbar from "react-perfect-scrollbar";
 import { TranslatorContext } from "../../../contextProviders/Translator";
 import { formatDate } from '../../../utils/format';
@@ -9,6 +12,57 @@ import PartsMap from './PartsMap';
 import { primary } from '../../../styles/colors';
 import NotFound from '../../Segments/NotFound';
 
+const PARTS_SUBSCRIPTION = gql`
+  subscription partAdded($employeeId: Int!) {
+    partAdded(employeeId: $employeeId) {
+        id
+        partId
+        date
+        address
+        reason
+        type {
+            mounting
+            maintenance
+            repair
+            others
+        }
+        finished
+        notFinishedReason
+        employeeId
+        customerId
+        customer{
+            id
+            name
+        }
+    }
+  }
+`;
+
+const PART_UPDATED_SUBSCRIPTION = gql`
+  subscription partUpdated($employeeId: Int!) {
+    partUpdated(employeeId: $employeeId) {
+        id
+        partId
+        date
+        address
+        reason
+        type {
+            mounting
+            maintenance
+            repair
+            others
+        }
+        finished
+        notFinishedReason
+        employeeId
+        customerId
+        customer{
+            id
+            name
+        }
+    }
+  }
+`;
 
 const PartsList = ({parts, distances, onScrollYReachEnd, translations, handleOpen, loadingMore}) => {
     let renderParts = [...parts];
@@ -116,15 +170,71 @@ const PartsList = ({parts, distances, onScrollYReachEnd, translations, handleOpe
     )
 }
 
-const Technician = ({tab, parts, handleOpen, loadingMore, onScrollYReachEnd}) => {
+const Technician = ({tab, parts: dbParts, handleOpen, loadingMore, onScrollYReachEnd}) => {
+     const token = sessionStorage.getItem("token");
+    const decodedToken = jwt_decode(token);
     const mapContainer = React.useRef();
     const { translations } = React.useContext(TranslatorContext);
+    const [me] = React.useState(decodedToken.employee);
     const [mapHeight, setMapHeight] = React.useState(400);
     const [distances, setDistances] = React.useState();
+    const [parts, setParts] = React.useState([]);
+    const [subscriptionParts, setSubscriptionParts] = React.useState([]);
+    const { data: dataPartAdded } = useSubscription(PARTS_SUBSCRIPTION, { variables: { employeeId: me.id } });
+    const { data: dataPartUpdated } = useSubscription(PART_UPDATED_SUBSCRIPTION, { variables: { employeeId: me.id } });
 
     React.useEffect(() => {
         if(!!mapContainer && !!mapContainer.current && !!mapContainer.current.clientHeight) setMapHeight(mapContainer.current.clientHeight);
     },[mapContainer])
+
+    const getUpdateParts = (apolloParts, subsParts) => {
+        let updatedParts = [...apolloParts];
+        if(subsParts.length > 0){
+            for (let index = (subsParts.length - 1); index >= 0; index--) {
+                const subsPart = subsParts[index];
+                updatedParts.unshift(subsPart);
+            }
+        }
+        return updatedParts;
+    }
+
+    React.useEffect(() => {
+        console.info('DB CHANGE', dbParts);
+        if(!!dbParts){
+            const newParts = getUpdateParts(dbParts, subscriptionParts);
+            setParts(newParts);
+        }
+    },[dbParts])
+
+    React.useEffect(() => {
+        console.info('ADDED', dataPartAdded);
+        if(!!dataPartAdded && !!dataPartAdded.partAdded && dataPartAdded.partAdded !== undefined){
+            const newSubsParts = [...subscriptionParts];
+            newSubsParts.unshift(dataPartAdded.partAdded);
+
+            const newParts = getUpdateParts(dbParts, newSubsParts);
+            setParts(newParts);
+            setSubscriptionParts(newSubsParts);
+        }
+    },[dataPartAdded])
+
+    React.useEffect(() => {
+        console.info('UPDATED', dataPartUpdated);
+        if(!!dataPartUpdated && !!dataPartUpdated.partUpdated && dataPartUpdated.partUpdated !== undefined){
+            let newParts = [];
+
+            parts.forEach(part => {
+                if(part.id === dataPartUpdated.partUpdated.id){
+                    newParts.push(dataPartUpdated.partUpdated)
+                } 
+                else{
+                    newParts.push(part);
+                }
+            });
+
+            setParts(newParts);
+        }
+    },[dataPartUpdated])
 
     return (
         <div
