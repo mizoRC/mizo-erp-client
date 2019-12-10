@@ -4,6 +4,7 @@ import { useApolloClient } from '@apollo/react-hooks';
 import { withRouter, Link } from 'react-router-dom';
 import { gql } from 'apollo-boost';
 import jwt_decode from 'jwt-decode';
+import SnowStorm from 'react-snowstorm';
 import { execute } from '../../utils/graphql';
 import { TranslatorContext } from '../../contextProviders/Translator';
 import CustomCard from '../../displayComponents/CustomCard/Card';
@@ -11,8 +12,8 @@ import CustomCardHeader from '../../displayComponents/CustomCard/CardHeader';
 import CustomCardBody from '../../displayComponents/CustomCard/CardBody';
 import * as mainStyles from '../../styles';
 import bgImage from '../../assets/fondo.png';
-import logo from '../../assets/logo_white.svg';
-
+// import logo from '../../assets/logo_white.svg';
+import logo from '../../assets/logo_navidad.png';
 
 const useStyles = makeStyles(theme => ({
     ...mainStyles,
@@ -137,6 +138,7 @@ const Login = ({history}) => {
 
     return(
         <Paper className={classes.mainPaperContainer} square={true}>
+            <SnowStorm snowCharacter={"&#10052;"} animationInterval={50}/>
             <Paper className={classes.container} square={true}>
                 <div className={classes.centered}>
                     <CustomCard style={{width: "20rem"}}>

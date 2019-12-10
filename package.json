@@ -29,6 +29,7 @@
     "react-perfect-scrollbar": "^1.5.3",
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.2.0",
+    "react-snowstorm": "^0.0.3",
     "react-toastify": "^5.4.0",
     "read-excel-file": "^4.0.5",
     "rebound": "^0.1.0",
