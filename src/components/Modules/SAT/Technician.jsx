@@ -199,7 +199,6 @@ const Technician = ({tab, parts: dbParts, handleOpen, loadingMore, onScrollYReac
     }
 
     React.useEffect(() => {
-        console.info('DB CHANGE', dbParts);
         if(!!dbParts){
             const newParts = getUpdateParts(dbParts, subscriptionParts);
             setParts(newParts);
@@ -207,7 +206,6 @@ const Technician = ({tab, parts: dbParts, handleOpen, loadingMore, onScrollYReac
     },[dbParts])
 
     React.useEffect(() => {
-        console.info('ADDED', dataPartAdded);
         if(!!dataPartAdded && !!dataPartAdded.partAdded && dataPartAdded.partAdded !== undefined){
             const newSubsParts = [...subscriptionParts];
             newSubsParts.unshift(dataPartAdded.partAdded);
@@ -219,7 +217,6 @@ const Technician = ({tab, parts: dbParts, handleOpen, loadingMore, onScrollYReac
     },[dataPartAdded])
 
     React.useEffect(() => {
-        console.info('UPDATED', dataPartUpdated);
         if(!!dataPartUpdated && !!dataPartUpdated.partUpdated && dataPartUpdated.partUpdated !== undefined){
             let newParts = [];
 
