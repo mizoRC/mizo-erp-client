@@ -4,18 +4,29 @@ import Map from '../../Segments/Map';
 
 const PartsMap = ({height, parts, setDistances}) => {
     let geocoder = new window.google.maps.Geocoder();
-    const[markers, setMarkers] = React.useState([]);
+    const [markers, setMarkers] = React.useState([]);
 
     const findLatLang = address => {
         return new Promise((resolve, reject) => {
-            geocoder.geocode({'address': address}, function(results, status) {
-                if (status === "OK" && status !== "ZERO_RESULTS") {
-                    const coords = results[0].geometry.location.toJSON();
-                    resolve(coords);
-                } else {
-                    reject(new Error('Couldnt\'t find the location ' + address));
-                }
-            })
+            const geocode = () => {
+                geocoder.geocode({'address': address}, function(results, status) {
+                    if (status === "OK" && status !== "ZERO_RESULTS") {
+                        const coords = results[0].geometry.location.toJSON();
+                        resolve(coords);
+                    } else {
+                        if(status === "OVER_QUERY_LIMIT"){
+                            setTimeout(geocode, 1000);
+                        }
+                        else{
+                            console.error(results);
+                            console.error(status);
+                            console.error('Couldnt\'t find the location ' + address);
+                            resolve(null);
+                        }
+                    }
+                })
+            }
+            geocode();
         })
     } 
 
@@ -35,11 +46,18 @@ const PartsMap = ({height, parts, setDistances}) => {
 
     const getDistance = async (location, currentPosition) => {
         return new Promise((resolve, reject) => {
-            const fromLocation = new window.google.maps.LatLng(location.lat, location.lng);
-            const toLocation = new window.google.maps.LatLng(currentPosition.lat, currentPosition.lng);
-            const distance = window.google.maps.geometry.spherical.computeDistanceBetween (fromLocation, toLocation);
-            const kmDistance = parseFloat((distance / 1000).toFixed(2));
-            resolve(kmDistance);
+            setTimeout(() => {
+                if(!!location && !!location.lat && !!location.lng){
+                    const fromLocation = new window.google.maps.LatLng(location.lat, location.lng);
+                    const toLocation = new window.google.maps.LatLng(currentPosition.lat, currentPosition.lng);
+                    const distance = window.google.maps.geometry.spherical.computeDistanceBetween (fromLocation, toLocation);
+                    const kmDistance = parseFloat((distance / 1000).toFixed(2));
+                    resolve(kmDistance);
+                }
+                else{
+                    resolve("");
+                }
+            },100);
         })
     }
 
@@ -47,7 +65,7 @@ const PartsMap = ({height, parts, setDistances}) => {
         try {
             let distancePromises = [];
             for(let i = 0; i < locations.length; i++){
-                distancePromises.push(getDistance(locations[i], currentPosition))
+                if(locations[i]) distancePromises.push(getDistance(locations[i], currentPosition))
             }
             
             const distances = await Promise.all(distancePromises);
@@ -77,14 +95,17 @@ const PartsMap = ({height, parts, setDistances}) => {
         if(currentPosition) distances = await getDistances(locations, currentPosition);
 
         parts.forEach((part,index) => {
+
             let marker = {
-                position: locations[index],
                 labelReason: part.reason,
                 labelCustomer: part.customer.name,
                 finished: part.finished
             }
-            if(distances) marker.distance = distances[index];
-            newMarkers.push(marker);
+            if(distances && distances[index]) marker.distance = distances[index];
+            if(locations && locations[index]){
+                marker.position = locations[index];
+                newMarkers.push(marker);
+            }            
         });
 
         setMarkers(newMarkers);
@@ -93,6 +114,10 @@ const PartsMap = ({height, parts, setDistances}) => {
 
     React.useEffect(() => {
         buildMarkers();
+
+        return () => {
+            setMarkers([])
+        }
     }, [parts]);
 
     return(
