@@ -115,211 +115,218 @@ const Payment = ({open, handleClose, handleDone, lines, total, totalTaxes, custo
 				<DialogTitle style={{textAlign: 'center'}}>
 					{translations.payment}
 				</DialogTitle>
-				<DialogContent>
+				<DialogContent
+                    style={{
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflowY: 'hidden'
+                    }}
+                >
                     <div
                         style={{
-                            width: '100%',
+                            width: '50%',
+                            height: '100%',
                             display: 'flex',
-                            flexDirection: 'row',
+                            flexDirection: 'column',
                             alignItems: 'center',
-                            justifyContent: 'center'
+                            justifyContent: 'center',
+                            margin: '15px',
+                            backgroundColor: "#EDEFF2",
+                            borderRadius: '6px'
                         }}
                     >
                         <div
                             style={{
-                                width: '50%',
-                                height: '100%',
+                                width: '100%',
                                 display: 'flex',
-                                flexDirection: 'column',
+                                flexDirection: 'row',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                margin: '15px',
-                                backgroundColor: "#EDEFF2",
-                                borderRadius: '6px'
+                                justifyContent: 'space-around',
+                                padding: '10px',
+                                marginTop: '20px'
                             }}
                         >
-                            <div
-                                style={{
-                                    width: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-around',
-                                    padding: '10px',
-                                    marginTop: '20px'
-                                }}
+                            <Button 
+                                variant="contained" 
+                                onClick={handleChangePaymentCash}
+                                color={(paymentMethod === PAYMENT_METHODS.CASH) ? "primary" : "default"}
                             >
-                                <Button 
-                                    variant="contained" 
-                                    onClick={handleChangePaymentCash}
-                                    color={(paymentMethod === PAYMENT_METHODS.CASH) ? "primary" : "default"}
-                                >
-                                    <i className="far fa-money-bill-alt" style={{marginRight: '10px'}}></i>
-                                    {translations.cash}
-                                </Button>   
+                                <i className="far fa-money-bill-alt" style={{marginRight: '10px'}}></i>
+                                {translations.cash}
+                            </Button>   
 
-                                <Button 
-                                    variant="contained" 
-                                    onClick={handleChangePaymentCreditCard}
-                                    color={(paymentMethod === PAYMENT_METHODS.CREDIT_CARD) ? "primary" : "default"}
-                                >
-                                    <i className="far fa-credit-card" style={{marginRight: '10px'}}></i>
-                                    {translations.card}
-                                </Button>
+                            <Button 
+                                variant="contained" 
+                                onClick={handleChangePaymentCreditCard}
+                                color={(paymentMethod === PAYMENT_METHODS.CREDIT_CARD) ? "primary" : "default"}
+                            >
+                                <i className="far fa-credit-card" style={{marginRight: '10px'}}></i>
+                                {translations.card}
+                            </Button>
+                        </div>
+
+                        <div
+                            style={{
+                                width: 'calc(100% - 100px)',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '10px',
+                                marginTop: '20px'
+                            }}
+                        >
+                            <div>
+                                <Typography variant="h5">{translations.total}</Typography>
                             </div>
 
-                            <div
-                                style={{
-                                    width: 'calc(100% - 100px)',
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    padding: '10px',
-                                    marginTop: '20px'
-                                }}
-                            >
-                                <div>
-                                    <Typography variant="h5">{translations.total}</Typography>
-                                </div>
+                            <div>
+                                <Typography variant="h5">{total}€</Typography>
+                            </div>
+                        </div>
 
-                                <div>
-                                    <Typography variant="h5">{total}€</Typography>
-                                </div>
+                        <div
+                            style={{
+                                width: 'calc(100% - 100px)',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '10px',
+                                marginTop: '20px'
+                            }}
+                        >
+                            <div>
+                                <Typography variant="h5">{translations.delivered}</Typography>
                             </div>
 
-                            <div
-                                style={{
-                                    width: 'calc(100% - 100px)',
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    padding: '10px',
-                                    marginTop: '20px'
-                                }}
-                            >
+                            {(paymentMethod === PAYMENT_METHODS.CREDIT_CARD) ?
                                 <div>
-                                    <Typography variant="h5">{translations.delivered}</Typography>
+                                    <Typography variant="h5">{delivered}€</Typography>
                                 </div>
-
-                                {(paymentMethod === PAYMENT_METHODS.CREDIT_CARD) ?
-                                    <div>
-                                        <Typography variant="h5">{delivered}€</Typography>
-                                    </div>
-                                    :
-                                    <div>
-                                        <FormControl 
-                                            className={classes.input} 
-                                            variant="outlined"
-                                            disabled={paymentMethod === PAYMENT_METHODS.CREDIT_CARD}
-                                        >
-                                            <OutlinedInput
-                                                id="input_delivered"
-                                                value={delivered}
-                                                onChange={handleChangeDelivered}
-                                                error={errorEmptyDelivered}
-                                                margin="dense"
-                                                type="number" 
-                                                inputProps={{ min: total, step: "0.01" }}
-                                                endAdornment={<InputAdornment position="end">€</InputAdornment>}
-                                                labelWidth={0}
-                                            />
-                                        </FormControl>
-                                    </div>
-                                }
-                            </div>
-
-                            <div
-                                style={{
-                                    width: 'calc(100% - 100px)',
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    padding: '10px',
-                                    marginTop: '20px'
-                                }}
-                            >
+                                :
                                 <div>
-                                    <Typography variant="h5">{translations.exchange}</Typography>
-                                </div>
-
-                                <div>
-                                    <Typography variant="h5">{exchange}€</Typography>
-                                </div>
-                            </div>
-
-                            {customer &&
-                                <div
-                                    style={{
-                                        width: '100%',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        padding: '10px',
-                                        marginTop: '40px'
-                                    }}
-                                >
-                                    <div>
-                                        <i className="fas fa-user" style={{marginRight: '6px'}}></i>
-                                        {translations.customer}:
-                                    </div>
-                                    <div style={{marginTop: '10px'}}>
-                                        {customer.name}
-                                    </div>                                
+                                    <FormControl 
+                                        className={classes.input} 
+                                        variant="outlined"
+                                        disabled={paymentMethod === PAYMENT_METHODS.CREDIT_CARD}
+                                    >
+                                        <OutlinedInput
+                                            id="input_delivered"
+                                            value={delivered}
+                                            onChange={handleChangeDelivered}
+                                            error={errorEmptyDelivered}
+                                            margin="dense"
+                                            type="number" 
+                                            inputProps={{ min: total, step: "0.01" }}
+                                            endAdornment={<InputAdornment position="end">€</InputAdornment>}
+                                            labelWidth={0}
+                                        />
+                                    </FormControl>
                                 </div>
                             }
                         </div>
 
                         <div
                             style={{
-                                width: '50%',
-                                height: '100%',
+                                width: 'calc(100% - 100px)',
                                 display: 'flex',
-                                flexDirection: 'column',
+                                flexDirection: 'row',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                borderLeft: `1px dashed ${primary}`,
-                                padding: '10px'
+                                justifyContent: 'space-between',
+                                padding: '10px',
+                                marginTop: '20px'
+                            }}
+                        >
+                            <div>
+                                <Typography variant="h5">{translations.exchange}</Typography>
+                            </div>
+
+                            <div>
+                                <Typography variant="h5">{exchange}€</Typography>
+                            </div>
+                        </div>
+
+                        {customer &&
+                            <div
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '10px',
+                                    marginTop: '40px'
+                                }}
+                            >
+                                <div>
+                                    <i className="fas fa-user" style={{marginRight: '6px'}}></i>
+                                    {translations.customer}:
+                                </div>
+                                <div style={{marginTop: '10px'}}>
+                                    {customer.name}
+                                </div>                                
+                            </div>
+                        }
+                    </div>
+
+                    <div
+                        style={{
+                            width: '50%',
+                            height: '400px',
+                            maxHeight: '400px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderLeft: `1px dashed ${primary}`,
+                            padding: '10px'
+                        }}
+                    >
+                        <div
+                            style={{
+                                height: '46px',
+                                 width: '330px',
+                                marginBottom: '10px'
                             }}
                         >
                             <Button 
                                 variant="contained" 
                                 color="primary"
-                                style={{marginBottom: '10px', width: '330px'}}
                                 onClick={handlePrint}
+                                fullWidth={true}
                             >
                                 <i className="fas fa-print" style={{marginRight: '10px'}}></i>
                                 {translations.printTicket}
                             </Button>
-                            <div
-                                style={{
-                                    width: '330px',
-                                    minWidth: '330px',
-                                    maxWidth: '330px',
-                                    height: '550px',
-                                    minHeight: '550px',
-                                    maxHeight: '550px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    border: '2px solid #C8CED8'
-                                }}
+                        </div>
+                        <div
+                            style={{
+                                width: '330px',
+                                minWidth: '330px',
+                                maxWidth: '330px',
+                                height: 'calc(100% - 46px)',
+                                maxHeight: '400px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '2px solid #C8CED8'
+                            }}
+                        >
+                            <PerfectScrollbar 
+                                options={{suppressScrollX: true}}
                             >
-                                <PerfectScrollbar 
-                                    options={{suppressScrollX: true}}
-                                >
-                                    <Ticket 
-                                        company={company}
-                                        order={order}
-                                    />
-                                </PerfectScrollbar>
-                            </div>		
-                        </div>	
-                    </div>
+                                <Ticket 
+                                    company={company}
+                                    order={order}
+                                />
+                            </PerfectScrollbar>
+                        </div>		
+                    </div>	
 				</DialogContent>
 				<DialogActions>
                     <Button onClick={handleClose} color="default" disabled={printed || addingOrder}>
