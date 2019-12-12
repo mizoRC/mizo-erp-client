@@ -168,7 +168,7 @@ const ProductsGrid = ({addLine}) => {
                         <PerfectScrollbar onYReachEnd={onScrollYReachEnd} style={{width: '100%'}}>
                             <Grid container spacing={1} style={{margin: '0px', width: '100%'}}>
                                 {data.products.rows.map(product => (
-                                    <Grid key={product.id} item xs={12} sm={6} md={6} lg={4}>
+                                    <Grid key={product.id} item xs={12} sm={6} md={6} lg={6} xl={4}>
                                         <ProductCard product={product} action={addLine}/>
                                     </Grid>
                                 ))}

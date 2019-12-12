@@ -304,7 +304,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                 id="multiline-reason"
                                 label={translations.reason}
                                 multiline
-                                rows="4"
+                                rows="3"
                                 value={reason}
                                 margin="normal"
                                 variant="outlined"
@@ -341,7 +341,7 @@ const PartModal = ({open, handleClose, handleSave, adding, updating, part, custo
                                     id="multiline-clarification"
                                     label={translations.technicianClarifications}
                                     multiline
-                                    rows="4"
+                                    rows="3"
                                     value={notFinishedReason}
                                     margin="normal"
                                     variant="outlined"
