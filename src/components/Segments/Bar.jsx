@@ -4,7 +4,7 @@ import { withRouter } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
 import { TranslatorContext } from '../../contextProviders/Translator';
 import { ROLES } from '../../constants';
-import logoComplete from '../../assets/logo_complete_white.svg';
+// import logoComplete from '../../assets/logo_complete_white.svg';
 import logo from '../../assets/logo_white.svg';
 
 const useStyles = makeStyles(theme => ({
@@ -169,7 +169,6 @@ const Bar = ({history, transparent}) => {
                         open={open}
                         anchorEl={anchorRef.current}
                         transition
-                        disablePortal
                     >
                         {({ TransitionProps, placement }) => (
                             <Grow
