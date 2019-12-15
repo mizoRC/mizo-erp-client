@@ -187,6 +187,27 @@ const Technician = ({tab, parts: dbParts, handleOpen, loadingMore, onScrollYReac
         if(!!mapContainer && !!mapContainer.current && !!mapContainer.current.clientHeight) setMapHeight(mapContainer.current.clientHeight);
     },[mapContainer])
 
+    const reduceParts = (newParts) => {
+        let uniqueParts = [];
+
+        for (let index = (newParts.length - 1); index >= 0; index--) {
+            let exists = false;
+            uniqueParts.forEach(uniquePart => {
+                if(uniquePart.id === newParts[index].id) exists = true;
+            });
+            if(!exists) uniqueParts.push(newParts[index]);
+        }
+
+        return uniqueParts;
+
+        /* let uniqueParts = newParts.reduce((unique, item, index) => {
+            return unique.includes(item) ? unique : [...unique, item]
+        },[]);
+
+        console.info('UNIQUE PARTS', uniqueParts);
+        return uniqueParts; */
+    }
+
     const getUpdateParts = (apolloParts, subsParts) => {
         let updatedParts = [...apolloParts];
         if(subsParts.length > 0){
@@ -201,7 +222,8 @@ const Technician = ({tab, parts: dbParts, handleOpen, loadingMore, onScrollYReac
     React.useEffect(() => {
         if(!!dbParts){
             const newParts = getUpdateParts(dbParts, subscriptionParts);
-            setParts(newParts);
+            const reducedParts = reduceParts(newParts);
+            setParts(reducedParts);
         }
     },[dbParts])
 
@@ -211,7 +233,8 @@ const Technician = ({tab, parts: dbParts, handleOpen, loadingMore, onScrollYReac
             newSubsParts.unshift(dataPartAdded.partAdded);
 
             const newParts = getUpdateParts(dbParts, newSubsParts);
-            setParts(newParts);
+            const reducedParts = reduceParts(newParts);
+            setParts(reducedParts);
             setSubscriptionParts(newSubsParts);
         }
     },[dataPartAdded])
@@ -229,7 +252,8 @@ const Technician = ({tab, parts: dbParts, handleOpen, loadingMore, onScrollYReac
                 }
             });
 
-            setParts(newParts);
+            const reducedParts = reduceParts(newParts);
+            setParts(reducedParts);
         }
     },[dataPartUpdated])
 
