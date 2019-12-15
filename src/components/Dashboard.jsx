@@ -174,7 +174,7 @@ const Dashboard = ({history}) => {
                                     </Grid>
                                 }
 
-                                {((data.me.role === ROLES.MANAGER) || (data.me.role === ROLES.TECHNICIAN)) &&
+                                {((data.me.role === ROLES.MANAGER) || (data.me.role === ROLES.SELLER) || (data.me.role === ROLES.TECHNICIAN)) &&
                                     <Grid className={classes.centered}  item xs={12} sm={6} md={4}>
                                         <GridCard title={translations.sat} img={satIcon} action={() => {goToModule(`/sat/${data.me.company.id}`)}}/>
                                     </Grid>
